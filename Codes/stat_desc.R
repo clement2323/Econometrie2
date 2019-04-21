@@ -1,16 +1,32 @@
 rm(list=ls())
 gc()
-source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
+library(data.table)
+library(foreign)
+source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
+
+df = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv')
+
+# Pour les stats des on enleve qd on ne connait pas salaire et diplome?
+# ici on garde salaire > 500!!!! Bonne idée ?
+df = df[!is.na(df$ddipl) & !is.na(df$salmee) & df$salmee >500 & df$salmee < 999998]
+
+# on passe de 400 000 à 120 000
+
+# boxplot
+par(cex.axis=0.5, cex.lab=1, cex.main=1, cex.sub=1)
+boxplot(salmee ~ ddipl, data = df, outline = F,xaxt = "n", 
+        space=10,ylab = "salaire mensuel")
+title(main=paste("salaire mensuel en fonction du diplôme","\n",sep=""),cex.main=1)
+title(main=paste("\n","moyenne sur toutes les années",sep=""),cex.main=0.8)
+text(seq(1,6,by=1), 
+     srt = 60, adj= 1, xpd = TRUE,-300,
+     labels = ddipl_lib[-1], cex=0.65)
 
 
 
 
 
-
-
-
-
-#TAFF Hughues
+#TAFF Hugues
 # 
 # data = df[!is.na(df$salmee) & df$salmee != 0 & df$salmee < 999998]
 # data

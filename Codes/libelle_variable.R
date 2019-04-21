@@ -5,8 +5,8 @@
 #dipl le plus eleve obtenu
 ddipl_lib<-setNames(c("Diplôme non déclaré",
   "Diplôme supérieur","Baccalauréat + 2 ans",
-  "Baccalauréat ou brevet professionnel ou autre diplôme de ce niveau",
-  "CAP, BEP ou autre diplôme de ce niveau",
+  "Baccalauréat/brevet pro",
+  "CAP/BEP",
   "Brevet des collèges",
   "Aucun diplôme ou CEP"),c("",1,3,4,5,6,7))
   
