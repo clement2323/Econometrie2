@@ -1,18 +1,81 @@
 rm(list=ls())
 gc()
 library(data.table)
-library(foreign)
-source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
+library(ggplot2)
+library(RColorBrewer)
+#RQ il faudra faire des stats descs sur 1990 2002 aussi -> idée  ouvrir sur stata, regarder les variables pertinentes via dico et exporter la table de stata avec les variables sélectionnées..
 
-df = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv')
+# source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
+source("C:/Users/Clement/Desktop/Projet Économétrie 2/libelle_variable.R")
+
+
+
+# df = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv')
+df = fread('C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv')
+
 
 # Pour les stats des on enleve qd on ne connait pas salaire et diplome?
 # ici on garde salaire > 500!!!! Bonne idée ?
-df = df[!is.na(df$ddipl) & !is.na(df$salmee) & df$salmee >500 & df$salmee < 999998]
+#999998 =Refus ,Ne sait pas =999999
+df = df[!is.na(df$ddipl) & !is.na(df$salmee) & df$salmee >500 & !(df$salmee %in% c(9999998,9999999))]
+
+plot(density(df$salmee,na.rm = TRUE))
+plot(density(df[df$salmee<50000,]$salmee,na.rm = TRUE))
+plot(density(df[df$salmee<10000,]$salmee,na.rm = TRUE))
+
 
 # on passe de 400 000 à 120 000
 
 # boxplot
+
+#Petite explication pour Hugues : après avoir sourcé le code avec les libellé on a 
+#des vecteurs nommés avec pour nom les modas codées des variables et pour valeur les libellés.
+#si je veux tabler la variable dip et que je veux les libellés
+
+#sans libelle
+table(df$dip)
+#avec libelle , j'appelle le nom via le vecteur nomme dip_libelle -> dip_libelle[as.character(df$dip)]
+par(mfrow=c(2,2))
+sapply(split(df,df$annee),function(df_y){
+  #df_y<-df
+  #paste(names(sort(freq_dip)),collapse=",")
+  freq_dip<-sort(round(prop.table(table(dip_libelle[as.character(df_y$dip)]))*100,2))
+  plot(freq_dip)
+  text(seq_along(freq_dip), 
+       srt = 20, adj= 1,-300,
+       labels = names(freq_dip), cex=0.03)
+  
+})
+
+
+
+
+df$dip<-as.character(df$dip)
+#classes d'âge
+
+df$ag_cl <- cut(df$ag, breaks = quantile(df$ag), include.lowest = TRUE)
+
+ggplot(data = cbind(df,dip_l=dip_libelle[df$dip]))+geom_bar(position="dodge",aes(x=dip_l,fill=ag_cl))+coord_flip()+
+  scale_x_discrete(
+    limits=c("Autre diplôme (niveau bac+2)","DEUG","Brevet de technicien-brevet professionnel","Paramédical et social (niveau bac+2)","Maîtrise (M1)","Certificat d'études primaires","Ecoles niveau licence et au-delà","Bac professionnel"," Licence (L3)"," Bac technologique","Master (recherche ou professionnel),DEA,DESS,Doctorat","Brevet des collèges","Baccalauréat général","DUT-BTS","Sans diplôme","CAP-BEP")
+   ,labels=c("Autre diplôme (niveau bac+2)","DEUG","Brevet de technicien-brevet professionnel","Paramédical et social (niveau bac+2)","Maîtrise (M1)","Certificat d'études primaires","Ecoles niveau licence et au-delà","Bac professionnel"," Licence (L3)"," Bac technologique","Master (recherche ou professionnel),DEA,DESS,Doctorat","Brevet des collèges","Baccalauréat général","DUT-BTS","Sans diplôme","CAP-BEP")
+  ) +
+  theme(
+  legend.title=element_blank(),  
+  legend.position=c(.73,.7),
+  axis.title.y=element_blank(), 
+  text=element_text(family="serif",size=7),
+  plot.title=element_text(face="bold",hjust=c(0,0))
+)+ scale_fill_brewer(palette="PuBu")
+
+#Les jeunes ont tendances à être qielques peu plus diplomés..#portes ouvertes
+
+#salmet
+table(df$salmet) #Ok salmet n'est pas du tout renseignée... faire des essais sur stata pour voir si on a pas de pb avec read foreign
+
+table(df$ag)
+
+
 par(cex.axis=0.5, cex.lab=1, cex.main=1, cex.sub=1)
 boxplot(salmee ~ ddipl, data = df, outline = F,xaxt = "n", 
         space=10,ylab = "salaire mensuel")
@@ -121,32 +184,8 @@ text(seq(1,6,by=1),
 # ## Partie 3
 # df = fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/data_pour_suite.csv")
 # df
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# table(df$dip)
-# # 
-# # Vide Non renseigné
-# # 10 Master (recherche ou professionnel), DEA, DESS, Doctorat
-# # 12 Ecoles niveau licence et au-delà
-# # 22 Maîtrise (M1)
-# # 21 Licence (L3)
-# # 30 DEUG
-# # 31 DUT, BTS
-# # 32 Autre diplôme (niveau bac+2)
-# # 33 Paramédical et social (niveau bac+2)
-# # 41 Baccalauréat général
-# # 42 Bac technologique
-# # 43 Bac professionnel
-# # 44 Brevet de technicien, brevet professionnel
-# # 50 CAP, BEP
-# # 60 Brevet des collèges
-# # 70 Certificat d'études primaires
-# # 71 Sans diplôme
+
+
+
+
+

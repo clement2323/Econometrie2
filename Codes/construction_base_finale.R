@@ -130,6 +130,7 @@ fichier<-lapply(files[-c(1)],function(f){
     colnames(data)<-tmp
     }
   interet = data[ ,variable[variable %in% colnames(data)]]
+  #
   })
 
 table_finale = rbindlist(fichier, use.names = TRUE, fill = TRUE)
@@ -175,6 +176,10 @@ table_finale$annee_etude<-dip_vers_annee_etude[table_finale$ddipl]
 
 #Expérience potentielle  = (âge - nombre d'années d'études - six) =âge-agedip
 table_finale$exp_po =table_finale$ag - table_finale$annee_etude-6
+
+
+#Petit retraitement de salmet, avant 2013 8 -> refus et après 8 est utilisé comme une tranche => je mets ces lignes là à 98 (comme pour 2013, 2014)
+table_finale$salmet[table_finale$salmet=="8" & !(table_finale$annee %in% c("2013","2014"))]<-"98"
 
 
 #J'efface ce qui ne sert plus

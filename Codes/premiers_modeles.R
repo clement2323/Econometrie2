@@ -4,6 +4,8 @@ library(data.table)
 library(foreign)
 library(plyr)
 
+#IDEE POUR LA PARTIE REG : CREEER UNE TABLE CSV AVEC LES VRAIS LIBELLES A LAPLACE DES CODES POUR PAS GALERER
+
 
 ############################
 ####### Question 4 #########
