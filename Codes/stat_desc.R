@@ -86,7 +86,7 @@ text(seq(1,6,by=1),
      labels = ddipl_lib[-1], cex=0.65)
 
 
-
+#
 
 
 #TAFF Hugues

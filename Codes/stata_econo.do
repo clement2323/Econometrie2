@@ -9,8 +9,8 @@ cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
 insheet using "table_finale.csv", clear // Pour ouvrir un fichier .raw ou .csv
 
 
-cd "C:\Users\Clement\Desktop\Projet Économétrie 2\Données"
-use "indiv1990-2002.dta", clear // Pour ouvrir un fichier .raw ou .csv
+//cd "C:\Users\Clement\Desktop\Projet Économétrie 2\Données"
+//use "indiv1990-2002.dta", clear // Pour ouvrir un fichier .raw ou .csv
 
 
 //use "401k.dta" // Pour ouvrir un fichier classic stata
@@ -22,19 +22,26 @@ summarize //Description quantitative : (aussi) su su
 tabulate salmet  //  Description qualitative : aussi 
 browse //Affichage de labase de données dans la console
 
+//Rq : expérience potentielle = age-annee_etude-6 => exppo et année d'étude sont un peu liée mais l'âge les délie. ça revient à faire âge et année d'étude..
+gen log_salmee = log(salmee)
+
+
+//Reg naive en empilant tout et ne respectant rien
+
+reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude
+//une année d'étude augmente le salaire de 0.1 %
+//l'exp potentielle joue à hauteur de Bex_p +2 B_exp^2, une année d'expérience potentielle  augment le salaire de 0.048 %
+
+
+
+
+
 
 
 //gen log_price_per_dist=log(price_per_dist)
 //gen log_decalage_depart=log(1+decalage_depart) //desfois le décalage dépar vaut 0..
 
 
-//egen coupleau_c=group(coupleau)
-//egen tranche_horaire_c=group(tranche_horaire)
-//drop comfort coupleau tranche_horaire jour_semaine origine_destination
-//tabulate comfort comfort_c // 1 basique 2 confortable 3 luxe 4 non renseigné 5 normal
-//tabulate jour_semaine jour_semaine_c // ok même que sur R, dimanche 1, samedi 2 etc..
-//tabulate tranche_horaire tranche_horaire_c //1 après 20H 2 avant 10H 3 entre 10h et 17H 4 entre 17h et 20h
-//tabulate coupleau coupleau_c // 1 g-g 2 g-m 3 g-p 4 m-g 5 m-m 6 m-petite 7 p-g 8 p-m 9 p-p
 //reg log_price_per_dist recommended_price vitesse_decalage nb_apparition_trajet nb_meme_trajet i.comfort_c i.coupleau_c i.tranche_horaire_c i.jour_semaine_c
 
 * Within estimator
