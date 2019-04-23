@@ -60,12 +60,18 @@ reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude
 gen borne_inf = log(500)*(salmet=="B")+log(1000)*(salmet=="C")+log(1250)*(salmet=="D")+log(1500)*(salmet=="E")+log(2000)*(salmet=="F")+log(2500)*(salmet=="G")+log(3000)*(salmet=="H")+log(5000)*(salmet=="I")+log(8000) * (salmet == "J") if salmet !="A" & salmet!="98" & salmet !=""
 
 gen borne_sup = log(500)*(salmet=="A")+log(1000)*(salmet=="B")+log(1250)*(salmet=="C")+log(1500)*(salmet=="D")+log(2000)*(salmet=="E")+log(2500)*(salmet=="F")+log(3000)*(salmet=="G")+log(5000)*(salmet=="H")+log(8000) * (salmet == "I") if salmet !="J" & salmet!="98" & salmet !=""
-
+//en faisant
+char ddipl[omit] 7 
+// on impose que la oda de référence soit le 7 sans diplôme
 gen femme = (sexe ==2)
 
 xi : intreg borne_inf borne_sup c.exp_po c.exp_po#c.exp_po femme i.ddipl
 		
 tabulate ddipl // ddipl1 c'est le diplome du sup
+//Comme dans le cours on pourrait faire un modèle polytomique ordonné sans seuil connus pour vérifier 
+//comment interpréter le coeff de femme ? demander à hugues ou david ? //le probit avec seuil inconnus estimera 9 seuils car en fixera un à 0.
+//regarder les Td pour l'interprétaztion des coeffs on peut certainement interpréter les rapport de coeff et le signe des coeffs.
+
 //Rq : faire apparaitre des variables de controles permet de dégager de l'endogénéité du bruit. Une variable est rarement totalement endogène mais on ne peut pas toutes les instrumenter non plus..
 
 
