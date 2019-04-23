@@ -182,6 +182,10 @@ table_finale$exp_po =table_finale$ag - table_finale$annee_etude-6
 
 #Petit retraitement de salmet, avant 2013 8 -> refus et après 8 est utilisé comme une tranche => je mets ces lignes là à 98 (comme pour 2013, 2014)
 table_finale$salmet[table_finale$salmet=="8" & !(table_finale$annee %in% c("2013","2014"))]<-"98"
+#pareil je modifie juste la valeur 
+chiffre_vers_lettre<-setNames(c("A","B","C","D","E","F","G","H","I","J"),seq(1,10))
+table_finale$salmet[table_finale$annee %in% c("2013","2014")] <-chiffre_vers_lettre[table_finale$salmet[table_finale$annee %in% c("2013","2014")]]
+
 
 ##recodage de salmet, je le renseigne pour les lignes qui ont répondu au salaire mais dont la tranche n'est de fait pas renseignée
 #table(table_finale$salmet)

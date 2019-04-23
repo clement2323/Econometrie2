@@ -57,8 +57,15 @@ reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude
 //Rq : dans le cours chapitre 4 on a déjà le code, le prof pose rgi ==1 pour fixer le rang d'interrogation de lindiv à 1 ie à sa première interrogation (il y en a 6 au total) certaines ariables ne sont dspo que pour certains rangs.
 //Il ne faut pas oublier de filtrer les 15 65 ans aussi !
 
+gen borne_inf = log(500)*(salmet=="B")+log(1000)*(salmet=="C")+log(1250)*(salmet=="D")+log(1500)*(salmet=="E")+log(2000)*(salmet=="F")+log(2500)*(salmet=="G")+log(3000)*(salmet=="H")+log(5000)*(salmet=="I")+log(8000) * (salmet == "J") if salmet !="A" & salmet!="98" & salmet !=""
 
+gen borne_sup = log(500)*(salmet=="A")+log(1000)*(salmet=="B")+log(1250)*(salmet=="C")+log(1500)*(salmet=="D")+log(2000)*(salmet=="E")+log(2500)*(salmet=="F")+log(3000)*(salmet=="G")+log(5000)*(salmet=="H")+log(8000) * (salmet == "I") if salmet !="J" & salmet!="98" & salmet !=""
 
+gen femme = (sexe ==2)
+
+xi : intreg borne_inf borne_sup c.exp_po c.exp_po#c.exp_po femme i.ddipl
+		
+tabulate ddipl // ddipl1 c'est le diplome du sup
 //Rq : faire apparaitre des variables de controles permet de dégager de l'endogénéité du bruit. Une variable est rarement totalement endogène mais on ne peut pas toutes les instrumenter non plus..
 
 
