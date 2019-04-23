@@ -2,6 +2,8 @@ rm(list=ls())
 gc()
 library(data.table)
 library(readstata13)
+#je source les libellés de variables
+source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
 
 #########################################
 ####Liste des des variables par thème####
@@ -180,6 +182,27 @@ table_finale$exp_po =table_finale$ag - table_finale$annee_etude-6
 
 #Petit retraitement de salmet, avant 2013 8 -> refus et après 8 est utilisé comme une tranche => je mets ces lignes là à 98 (comme pour 2013, 2014)
 table_finale$salmet[table_finale$salmet=="8" & !(table_finale$annee %in% c("2013","2014"))]<-"98"
+
+##recodage de salmet, je le renseigne pour les lignes qui ont répondu au salaire mais dont la tranche n'est de fait pas renseignée
+#table(table_finale$salmet)
+#sum(table_finale$salmet=="");sum(is.na(table_finale$salmee))
+table_finale$salmee<-as.numeric(table_finale$salmee)
+table_finale$salmet<-ifelse(is.na(table_finale$salmee),table_finale$salmet,
+                            ifelse(table_finale$salmee<500,"A",
+                                   ifelse(table_finale$salmee<1000,"B",
+                                          ifelse(table_finale$salmee<1250,"C",
+                                                 ifelse(table_finale$salmee<1500,"D",
+                                                        ifelse(table_finale$salmee<2000,"E",
+                                                               ifelse(table_finale$salmee<2500,"F",
+                                                                      ifelse(table_finale$salmee<3000,"G",
+                                                                             ifelse(table_finale$salmee<5000,"H",
+                                                                                    ifelse(table_finale$salmee<8000,"I",
+                                                                                           "J"))))))))))
+
+
+#filtre 15 - 65 ans
+table_finale<-table_finale[table_finale$ag<=65 & table_finale$ag>=15,]
+#Il restait quelques aberrations
 
 
 #J'efface ce qui ne sert plus

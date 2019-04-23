@@ -5,6 +5,7 @@ drop _all // Effacer toutes les variables
 //ctrl + D pour executer ligne de commande sélectionnée
 // Déclarer un répertoire de travail 
 
+//PAR la suite, CREER UNE TABLE STATA POUR REP FACILEMENT A TOUTE§S LES QUESTIONSavec les libeelés en lieu et placce des codes pour plus de facilité dans l'interprétation
 cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
 insheet using "table_finale.csv", clear // Pour ouvrir un fichier .raw ou .csv
 
@@ -25,13 +26,49 @@ browse //Affichage de labase de données dans la console
 //Rq : expérience potentielle = age-annee_etude-6 => exppo et année d'étude sont un peu liée mais l'âge les délie. ça revient à faire âge et année d'étude..
 gen log_salmee = log(salmee)
 
+//Dans toute la suite, on fera fit du fait que les valeurs manquantes pour la variable explicative sont forcément liées aux valeurs de ces dernières
+// faire peut etre une stat pour voir que les plus diplomés sont les plus riches et aussi ceux qui repondent le moins souvent ?
+
+
 
 //Reg naive en empilant tout et ne respectant rien
-
+//Q 4
 reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude
 //une année d'étude augmente le salaire de 0.1 %
-//l'exp potentielle joue à hauteur de Bex_p +2 B_exp^2, une année d'expérience potentielle  augment le salaire de 0.048 %
+//l'exp potentielle joue à hauteur de Bex_p +2 B_exp^2, une année d'expérience potentielle augmente le salaire de 0.048 %
+// sans biais si les variables explicatives sont exogènes au bruit et ?? à revoir
+// si les variables sont exogènes au bruit ie si  (les XI iid sont nécessaires pour la convergence de la moyenne en espérance).
+// les obs ne sont pas iid car les individus sont interrogés plusieurs fois donc lien entre les différentes interrogations
+// + les logement sinterrogés sont dans la même grappe etc..
 
+//Question 5 
+// plusieurs cas : prenons pour i= individu et t trimestre de l'année  Y_it=x_ibeta +alphai+eppsit avec alphai l'effet individuel
+// si E(Xialphai)=0 => pas d'endogénéité (effets aléatoires) le seul problème se situe au niveau des estimateurs de variance non convergents (ça se regle avec l'option cluster)
+
+// Si E(Xitalphai)!=0 ce qui est certainement le cas puisque l'effet individuel de i joue certainement sur son niveau de diplôme
+//Tester within and first diff et développer leurs avantages et inconvénients, le pb de first diff c'est qu'on perd une obsevation et on en a pas toujour 2 interrogation
+// le within est plus économique, à voir ce qui se passe en essayant les deux. (je reprends les codes du cours d'économétrie).
+// À ce propose faut-il vraiment estimer le modèle ? ce n'est pas demandé.
+// pour que within marche il faut exogénéité stricte,ie E(xit*epsit')=0 quelquesoit t et t'
+//ie Xit non corrélé aux chocs passés et futurs, on y croit pas trop,par exemple le salaire future va dépendre du salaie passé, dernière solution => exo faible et instrumentalisation  mais chiant.
+
+//Question 6
+// je vais remplir la variable salmet sur R quand salmee(salaire en euro est rempli) puis faire un polytomique ? var explicative ?
+//Rq : dans le cours chapitre 4 on a déjà le code, le prof pose rgi ==1 pour fixer le rang d'interrogation de lindiv à 1 ie à sa première interrogation (il y en a 6 au total) certaines ariables ne sont dspo que pour certains rangs.
+//Il ne faut pas oublier de filtrer les 15 65 ans aussi !
+
+
+
+//Rq : faire apparaitre des variables de controles permet de dégager de l'endogénéité du bruit. Une variable est rarement totalement endogène mais on ne peut pas toutes les instrumenter non plus..
+
+
+
+//Question 6 la variable par tranche est en fait un second best quand on a pas l'info sur le salaire..
+// but recoder les salmee en tranche et faire du polytomique ordonné, pourquoi un ou plusieurs modèles ..??
+//on néglige le côté panel ici, ok c'est beaucoup plus simple. Pour l'instant, pas d'idée du deuxième modèle.
+
+
+//PARTIE 3 à l'échelle de la ville
 
 
 

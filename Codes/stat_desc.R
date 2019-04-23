@@ -6,7 +6,7 @@ library(RColorBrewer)
 #RQ il faudra faire des stats descs sur 1990 2002 aussi -> idée  ouvrir sur stata, regarder les variables pertinentes via dico et exporter la table de stata avec les variables sélectionnées..
 
 # source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
-source("C:/Users/Clement/Desktop/Projet Économétrie 2/libelle_variable.R")
+source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
 
 
 
