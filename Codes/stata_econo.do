@@ -69,9 +69,13 @@ xi : intreg borne_inf borne_sup c.exp_po c.exp_po#c.exp_po femme i.ddipl
 		
 tabulate ddipl // ddipl1 c'est le diplome du sup
 //Comme dans le cours on pourrait faire un modèle polytomique ordonné sans seuil connus pour vérifier 
+
+//le signe des coeffs est interprétable et le rapport des coeffs entre eux aussi, par cntre linterprétation de X dichotomque est à écrire.
 //comment interpréter le coeff de femme ? demander à hugues ou david ? //le probit avec seuil inconnus estimera 9 seuils car en fixera un à 0.
 //regarder les Td pour l'interprétaztion des coeffs on peut certainement interpréter les rapport de coeff et le signe des coeffs.
+// sinon revenir au modèle 0 1 en regardant P(Y<k) plutot que P(y=k) et dériver.
 
+//essayer les effets marginaux à la moyenne et l'effer marginal moyen car sinon l'effet marginal dépend du vecteur xi
 //Rq : faire apparaitre des variables de controles permet de dégager de l'endogénéité du bruit. Une variable est rarement totalement endogène mais on ne peut pas toutes les instrumenter non plus..
 
 
