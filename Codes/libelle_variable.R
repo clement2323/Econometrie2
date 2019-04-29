@@ -2,6 +2,27 @@
 #Stat desc
 #création des vecteurs nommés avec leurs libellés avec un set names
 
+# CSER char 1 Catégorie socioprofessionnelle pour les
+# actifs (niveau agrégé, PCS2003 ou PCS)
+# - Sans objet (inactif)
+# 0 - Non renseigné
+# 1 - Agriculteurs exploitants
+# 2 - Artisans, commerçants et chefs d'entreprise
+# 3 - Cadres et professions intellectuelles supérieures
+# 4 - Professions intermédiaires
+# 5 - Employés
+# 6 - Ouvriers
+# 8 - Chômeurs n'ayant jamais travaillé ou militaires du contingent
+
+# 
+# 1 Ménage d'une seule personne
+# 2 Famille monoparentale
+# 3 Couple sans enfant
+# 4 Couple avec enfant(s)
+# 5 Ménage de plusieurs personnes ayant toutes un lien de parenté avec la personne de référence
+# du ménage, ni couple, ni famille monoparentale
+
+
 #dipl le plus eleve obtenu
 ddipl_lib<-setNames(c("Diplôme non déclaré",
   "Diplôme supérieur","Baccalauréat + 2 ans",

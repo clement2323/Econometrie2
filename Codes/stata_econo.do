@@ -3,33 +3,27 @@ clear all // Tout syupprimer, code et variables
 drop _all // Effacer toutes les variables 
 
 //ctrl + D pour executer ligne de commande sélectionnée
-// Déclarer un répertoire de travail 
 
-//PAR la suite, CREER UNE TABLE STATA POUR REP FACILEMENT A TOUTE§S LES QUESTIONSavec les libeelés en lieu et placce des codes pour plus de facilité dans l'interprétation
 cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
 insheet using "table_finale.csv", clear // Pour ouvrir un fichier .raw ou .csv
 
-
 //cd "C:\Users\Clement\Desktop\Projet Économétrie 2\Données"
 //use "indiv1990-2002.dta", clear // Pour ouvrir un fichier .raw ou .csv
-
-
-//use "401k.dta" // Pour ouvrir un fichier classic stata
-//drop origine_destination tuu_arrival tuu_departure seats_left heure_arrondie  duration depcom_departure depcom_arrival departure_latitude departure_longitude departure_day departure_dates departure_city_name arrival_city_name booking_mode arrival_latitude arrival_longitude
-//regarder les données
 
 describe //donne les variables et leur type 
 summarize //Description quantitative : (aussi) su su
 tabulate salmet  //  Description qualitative : aussi 
 browse //Affichage de labase de données dans la console
 
+//choix de variables
+//keep 
+
+
 //Rq : expérience potentielle = age-annee_etude-6 => exppo et année d'étude sont un peu liée mais l'âge les délie. ça revient à faire âge et année d'étude..
 gen log_salmee = log(salmee)
 
 //Dans toute la suite, on fera fit du fait que les valeurs manquantes pour la variable explicative sont forcément liées aux valeurs de ces dernières
 // faire peut etre une stat pour voir que les plus diplomés sont les plus riches et aussi ceux qui repondent le moins souvent ?
-
-
 
 //Reg naive en empilant tout et ne respectant rien
 //Q 4
@@ -74,6 +68,8 @@ tabulate ddipl // ddipl1 c'est le diplome du sup
 //comment interpréter le coeff de femme ? demander à hugues ou david ? //le probit avec seuil inconnus estimera 9 seuils car en fixera un à 0.
 //regarder les Td pour l'interprétaztion des coeffs on peut certainement interpréter les rapport de coeff et le signe des coeffs.
 // sinon revenir au modèle 0 1 en regardant P(Y<k) plutot que P(y=k) et dériver.
+// ce n'est pas un logit..
+
 
 //essayer les effets marginaux à la moyenne et l'effer marginal moyen car sinon l'effet marginal dépend du vecteur xi
 //Rq : faire apparaitre des variables de controles permet de dégager de l'endogénéité du bruit. Une variable est rarement totalement endogène mais on ne peut pas toutes les instrumenter non plus..
@@ -87,21 +83,51 @@ tabulate ddipl // ddipl1 c'est le diplome du sup
 
 //PARTIE 3 à l'échelle de la ville
 
+//Question 7
+//cser cspp ag nbagenf
+//type men ?
+gen salrep = (salmee !=. )
+//il y a 136 000 individus qui donnent leurs salaires seulement
+egen sit_ind_c=group(sit_ind)
+tabulate sit_ind sit_ind_c
+
+//i.nbagenf  ne donne pas grand chose la variable typ men est plus agrégée on risque de voir plus d'effets dedans
+reg log_salmee i.sit_ind_c taux_dip_dep taux_chom femme immigre i.typmen c.ag c.ag#c.ag
+//l'effet de l'âge sur le diplôme est positif mais diminue l'âge augmente quand ce dernier augmente normal, yes?
+//le bac est la modalité de référence ici on voit que le gradient de salaire suit celui du diplôme
+// le nbagenfant est croissant avec le nombre d'enfant, peu d'effet sur salaire et le fait d'avoir des enfants semble jouer possitivement sur le salaire..
+//le fait d'être immigré joue négativement sur le salaire, à diplôme égal..
+// tout le monde est mieux rémunéré que le ménage à une personne..on fait pas d'enfant quand on a rien ? je me serai attendu à une idée de sacrifice des études du fait d'avoir des enfants
+//peut être faut il faire intéragir femme et type ménage pour voir un effet négatif.
+reg log_salmee i.sit_ind_c taux_dip_dep taux_chom femme i.typmen femme#i.typmen immigre c.ag c.ag#c.ag i.cspp 
+//Question je n'ai pas mis la variable cser ici (csp de l'enquêtée) car elle est directement reliée au salaire, totologique si la csp du mec bouge alors c'est qu'il avait des aptitudes lemploi occupé explique le salaire?
+//la csp non renseignée 0 est celle qui donne les effets les plus positifs sur le salaire, dur à interpréter
+// effet du taux de chomage sur le ssalaire positif ?? très bizarre (effet très faible)
+
+tabulate(cspp)
+//boum là on voit que les femmes avec enfant prennent des malus au niveau du salaire, c'est l'intéracton qui craint, un homme avec enfant ça change pas grand chose.
+
+//Question 9
+
+//Question sur les données de panel
+//dans un premier temps avec xtsetj'indique ce qu'est le temps (ident_temps) et ce qu'est l'indiv(ident_ind)	
+egen ident_ind_c=group(ident_ind)
+egen ident_temps_c=group(ident_temps)
+xtset ident_ind_c ident_temps_c
+//Question, sens des différences premières avec des variables quali  peut-être faut -il faire la différene première de toutes le indicatrices ?
+foreach x of varlist log_salmee sit_ind_c taux_dip_dep taux_chom femme typmen  immigre ag  cspp {
+ gen d_`x'=d.`x'
+}
+tabulate(sit_ind_c)
+reg d_log_salmee d_sit_ind_c d_taux_dip_dep d_taux_chom d_femme d_typmen d_immigre d_ag d_cspp
 
 
 
 
 
-//gen log_price_per_dist=log(price_per_dist)
-//gen log_decalage_depart=log(1+decalage_depart) //desfois le décalage dépar vaut 0..
 
 
-//reg log_price_per_dist recommended_price vitesse_decalage nb_apparition_trajet nb_meme_trajet i.comfort_c i.coupleau_c i.tranche_horaire_c i.jour_semaine_c
 
-* Within estimator
- //xtreg lcriv log_police unem incpc black y81-y93, fe
-* With the cluster option fe pour fix effect
-//faut-il un xt set avant ?
 
 //intéraction variable1#variable2  //forcer  modalité de référence ? // Rq : lecture 8 de stata pour iterpréter les quali, on interprête le coeff comme l'écart d'impact sur le prix par rapport à la modalité de référence.
 //xtset origine_destination_query_c permanent_id_c // i= origine-destination, t=trajet (cf cours, i = classe  t= élève) #réfléchir aux epsilons comme dans le cours ça fera des pazges  // question si je veux faire le trajet au cours du temps c'est chaud heureusement on l'évite en disant que le prix une fois fixé ne bouge plus.

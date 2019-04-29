@@ -106,11 +106,11 @@ source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
 #ordonnées par thèmes et ordre alphaetique dans haque thèmes
 variable<-c("actop","annee","ident","noi","noicon","stat2","stc","trim",
             "ancentr","art","contra","dchant","dudet","efen","efet","naf","titc","trefen","trefet",
-            "ag","cohab","cse","csei","cspm","cspp","cstot","matri","naia","naim","nat14","nat28","nbactoc","nbageenfa","nbagenf","scj","sexe","so","typmen5","typmen7","typmen21","typmen15",
-            "deparc","depeta","reg",
+            "ag","cohab","cse","csei","cser","cspm","cspp","cstot","matri","naia","naim","nat14","nat28","nbactoc","nbageenfa","nbagenf","scj","sexe","so","typmen5","typmen7","typmen21","typmen15",
+            "deparc","depeta","reg","dep","edep",
             "prim","revent","salmee","salmet","salred",
             "emphre","emphnh","hhc","hhc6","jourtr","nbheur","nbhp","sousempl","tpp",
-            "cite97","datdip","datgen","datsup","ddipl","dip","dip11","fordat","formoi","forsg","ngen","nivet","spe")
+            "cite97","datdip","datgen","datsup","ddipl","dip","dip11","dipdet","fordat","formoi","forsg","ngen","nivet","spe")
 
 
 path = "C:/Users/Clement/Desktop/Projet Économétrie 2/Données"
@@ -129,6 +129,8 @@ fichier<-lapply(files[-c(1)],function(f){
     tmp<-colnames(data)
     tmp[tmp=="dchantj"]<-"dchant" 
     tmp[tmp=="coured"]<-"cohab"
+    tmp[tmp=="depeta"]<-"deparc" #fusion des variables département
+    tmp[tmp=="nbageenfa"]<-"nbagenf"
     colnames(data)<-tmp
     }
   interet = data[ ,variable[variable %in% colnames(data)]]
@@ -146,7 +148,7 @@ tmp<-sapply(split(paste0(table_finale$annee,"_",table_finale$trim),table_finale$
 
 #ok je filtre sur les variables et salarié et actif occupé 
 table_finale = table_finale[(table_finale$stat2 == "2" & table_finale$actop =="1") ,]
-
+table_finale$ident_temps<-paste0(table_finale$annee,"_",table_finale$trim)
 
 #Passage des dates et age en numérique
 
@@ -208,17 +210,104 @@ table_finale$salmet<-ifelse(is.na(table_finale$salmee),table_finale$salmet,
 table_finale<-table_finale[table_finale$ag<=65 & table_finale$ag>=15,]
 #Il restait quelques aberrations
 
+# library(data.table)
+# table_finale<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
 
+#diplôme en 4 catégories sans diplome, bac, licence, master et plus
+#jemets en sans diplome tout ce qui est inférieur à bac
+dip_nomme<-setNames(c("master et plus","master et plus",
+                 "licence maîtrise","licence maîtrise",
+                 "Bac+2","Bac+2","Bac+2","Bac+2",
+                 "Bac","Bac","Bac",
+                 "diplôme pro","diplôme pro","sans diplôme","sans diplôme","sans diplôme")
+               ,c(10,12,21,22,30,31,32,33,41,42,43,44,50,60,70,71))
+               
+#J'appelle les variables commes dans le modele de la question 7
+table_finale$sit_ind<-dip_nomme[table_finale$dip]
+#à revoir plus tard
+
+#la nationalité, variable immigr oui non si l'enquêté est issu de l'imigration
+
+table_finale$immigre<-ifelse((table_finale$annee %in% c("2013","2014") & table_finale$nat14 != 10),1,
+                             ifelse(((!table_finale$annee %in% c("2013","2014"))&table_finale$nat28 != 10),1,0))
+
+
+#cser pour la csp de l'individu  
+#cspp / m pour la sp du père et de la mère, je la laisse en une position
+table_finale$cspp<-substr(table_finale$cspp,1,1)
+table_finale$cspm<-substr(table_finale$cspm,1,1)
+
+table_finale$cspp[table_finale$cspp=="7"]<-"1"
+table_finale$cspm[table_finale$cspm=="7"]<-"1"
+#les anciens agri avec les agri
+
+# reproduction sociale
+# round(prop.table(table(table_finale$cspp,table_finale$sit_ind),1)*100,0)
+
+#les départements, infos dep + je me cantonne à la france métropolitaine
+table_finale[table_finale$deparc=="",]$deparc<-ifelse(table_finale[table_finale$deparc=="",]$annee %in% c("2013","2014"),table_finale[table_finale$deparc=="",]$edep,table_finale$dep)
+table_finale$deparc[table_finale$deparc %in% c("97","99","9A","9B","9C","9D","9E","9F","9K")]<-"97"
+table_finale$deparc[table_finale$deparc==""]<-"97" #Je mets dans 97 les 4000 non renseignés et (avec les dom)"
+#table(table_finale$deparc)
+
+#chomage par département, provient des données insee du RP2015 
+
+chomage_dep<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/chomage_dep.csv")
+chomage_dep$dep<-substr(chomage_dep$dep,1,2)
+
+dep_vers_taux_chom<-sapply(split(chomage_dep[,c("homme_chomeur","femme_chomeur","homme_emploi","femme_emploi")],chomage_dep$dep),function(x){
+# x<-split(chomage_dep[,c("homme_chomeur","femme_chomeur","homme_emploi","femme_emploi")],chomage_dep$dep)$'97'
+   x<-colSums(x)
+  unname(((x[1]+x[2])/(sum(x)))*100)
+  })
+chomage_dep$taux_chom<-(chomage_dep$homme_chomeur+chomage_dep$femme_chomeur)/(chomage_dep$homme_chomeur+chomage_dep$femme_chomeur+chomage_dep$homme_emploi+chomage_dep$femme_emploi)*100
+table_finale$taux_chom<-dep_vers_taux_chom[table_finale$deparc]
+
+#Les établissements
+etab<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/Etablissements d'enseignement superieur.csv")
+etab$dep<-substr(etab$`Code département`,3,4)
+
+tmp<-lapply(split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc)),function(x){
+  #x<-split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc))[[1]]
+  etab_concerne<-etab[etab$Date<=unique(x$annee) & etab$dep == unique(x$deparc)]
+  #je vais sommer l'ensemble des écoles dispo
+  t(colSums(etab_concerne[,c("Institut_Universitaire_de_Technologie","Institut_Universitaire_Professionnalisé","Université","Composante_universitaire","Ecole_ingénieurs" )],na.rm = TRUE))
+})
+tmp2<-do.call(rbind,tmp)
+row.names(tmp2)<-names(tmp)
+
+table_finale<-cbind(table_finale,tmp2[paste0(table_finale$annee,"_",table_finale$deparc),])
+#pour chaque département x année j'ai donc le nombre d'école de chaque type qui était ouvertes
+
+#pour chaque département x année je calcule le pourcentage de diplômés du supérieur
+table_finale$taux_dip_dep<-sapply(split(table_finale$sit_ind,paste0(table_finale$annee,"_",table_finale$dep)),function(x){
+  #x<-split(table_finale$sit_ind,paste0(table_finale$annee,"_",table_finale$dep))$'2003_75'
+  # head(x)
+  (sum(x=="master et plus",na.rm = TRUE)/length(x))*100
+  })[paste0(table_finale$annee,"_",table_finale$dep)]
+
+
+
+
+
+#table(table_finale$deparc)
+#je vais prendre dep en 2013,2014 et edep avant 2013 pour remplacer deparc quand on a pas l'info..
+
+# nbageenfa_lib
+# sum(table(table_finale$nbageenfa))
+table_finale$typmen7[table_finale$typmen7 %in% c(5,6,9)]<-5
+table_finale$typmen<-ifelse(table_finale$annee %in% c("2013","2014"),table_finale$typmen7,table_finale$typmen5)
+
+table(table_finale$typmen)
 #J'efface ce qui ne sert plus
+
 rm(list=ls()[ls()!="table_finale"])
-
-
-
 
 #Rq à ce stade je n'ai pas filtré sur les valeurs manquantes de salaire
 
-
 #Save en Rdata et en csv
+# table_finale<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
+
 fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
 save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")
 
