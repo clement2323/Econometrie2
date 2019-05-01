@@ -25,11 +25,11 @@
 
 #dipl le plus eleve obtenu
 ddipl_lib<-setNames(c("Diplôme non déclaré",
-  "Diplôme supérieur","Baccalauréat + 2 ans",
-  "Baccalauréat/brevet pro",
-  "CAP/BEP",
-  "Brevet des collèges",
-  "Aucun diplôme ou CEP"),c("",1,3,4,5,6,7))
+  "sup","Bac+2",
+  "Bac",
+  "CAP",
+  "Brevet",
+  "CEP"),c("",1,3,4,5,6,7))
   
 # NBAGEENFA ok
 # Nombre et âge (à la fin de la semaine de référence) des enfants du ménage

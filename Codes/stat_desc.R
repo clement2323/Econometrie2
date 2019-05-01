@@ -5,26 +5,50 @@ library(ggplot2)
 library(RColorBrewer)
 #RQ il faudra faire des stats descs sur 1990 2002 aussi -> idée  ouvrir sur stata, regarder les variables pertinentes via dico et exporter la table de stata avec les variables sélectionnées..
 
-# source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
-source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
+source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
+#source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
 
 
 
-# df = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv')
-df = fread('C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv')
+df = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv')
+df2 = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/table90_02.csv')
+df3 = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/salfr.csv')
+#df = fread('C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv')
+
+df2$ddipl = as.integer(df2$ddipl)
+df2$salfr = as.integer(df3$salfr)
+df2$salfr = df2$salfr
 
 
 # Pour les stats des on enleve qd on ne connait pas salaire et diplome?
 # ici on garde salaire > 500!!!! Bonne idée ?
 #999998 =Refus ,Ne sait pas =999999
-df = df[!is.na(df$ddipl) & !is.na(df$salmee) & df$salmee >500 & !(df$salmee %in% c(9999998,9999999))]
 
-plot(density(df$salmee,na.rm = TRUE))
-plot(density(df[df$salmee<50000,]$salmee,na.rm = TRUE))
-plot(density(df[df$salmee<10000,]$salmee,na.rm = TRUE))
+
+#PROBLEME : passage du franc à l'euro => actualisation en PPA par rapport à 2013
+df = df[!is.na(df$ddipl) & !is.na(df$salmee) & df$salmee >500 & !(df$salmee %in% c(9999998,9999999))]
+df2 = df2[!is.na(df2$ddipl) & !is.na(df2$salfr) & df2$salfr >500 & !(df2$salfr %in% c(9999998,9999999))]
+
+actu_eur2013<-setNames(c(1.00, 1.00, 1.01, 1.03, 1.05, 1.07, 1.07, 1.10, 1.11, 1.13, 1.15, 1.18, 1.20, 0.19, 0.19, 0.19,
+                          0.19, 0.20, 0.20, 0.20, 0.21, 0.21, 0.21, 0.22, 0.22),2014:1990)
+df2$actueur<-actu_eur2013[as.character(df2$annee)]
+df2$sal_actu <- df2$actueur * df2$salfr
+
+df$actueur<-actu_eur2013[as.character(df$annee)]
+df$sal_actu <- df$actueur * df$salmee
+
+df_suite = rbind(df[,c('annee','sal_actu','ddipl')], df2[,c('annee','sal_actu','ddipl')])
+df_suite
+
+
+par(mfrow=c(1,1))
+plot(density(df_suite[df_suite$sal_actu<5000 & df_suite$annee < 2010 & df_suite$annee >= 2000,]$sal_actu,na.rm = TRUE), col = 'red')
+lines(density(df_suite[df_suite$sal_actu<5000 & df_suite$annee < 2000,]$sal_actu,na.rm = TRUE))
+lines(density(df_suite[df_suite$sal_actu<5000 & df_suite$annee >= 2010,]$sal_actu,na.rm = TRUE), col = 'blue')
 
 
 # on passe de 400 000 à 120 000
+
 
 # boxplot
 
@@ -33,21 +57,22 @@ plot(density(df[df$salmee<10000,]$salmee,na.rm = TRUE))
 #si je veux tabler la variable dip et que je veux les libellés
 
 #sans libelle
-table(df$dip)
+table(df_suite$ddipl)
 #avec libelle , j'appelle le nom via le vecteur nomme dip_libelle -> dip_libelle[as.character(df$dip)]
+df_suite$decennie = df_suite$annee %/% 10
+
 par(mfrow=c(2,2))
-sapply(split(df,df$annee),function(df_y){
+sapply(split(df_suite,df_suite$decennie),function(df_y){
   #df_y<-df
   #paste(names(sort(freq_dip)),collapse=",")
-  freq_dip<-sort(round(prop.table(table(dip_libelle[as.character(df_y$dip)]))*100,2))
-  plot(freq_dip)
+  freq_dip<-sort(round(prop.table(table(ddipl_lib[as.character(df_y$ddipl)]))*100,2))
+  plot(freq_dip, ylab = 'pourcentage', cex.axis=1.5, cex.lab = 1.5)
+  title(main=paste("moyenne sur la décennie",df_y[1,]$decennie*10,sep=" "),cex.main=2)
   text(seq_along(freq_dip), 
-       srt = 20, adj= 1,-300,
-       labels = names(freq_dip), cex=0.03)
-  
+       srt = 60, adj= 1,-300,xpd = TRUE,
+       labels = names(freq_dip), cex=10)
+
 })
-
-
 
 
 df$dip<-as.character(df$dip)
@@ -66,7 +91,7 @@ ggplot(data = cbind(df,dip_l=dip_libelle[df$dip]))+geom_bar(position="dodge",aes
   axis.title.y=element_blank(), 
   text=element_text(family="serif",size=7),
   plot.title=element_text(face="bold",hjust=c(0,0))
-)+ scale_fill_brewer(palette="PuBu")
+)+ scale_fill_brewer(palette="YlGnBu")
 
 #Les jeunes ont tendances à être qielques peu plus diplomés..#portes ouvertes
 
@@ -82,7 +107,7 @@ boxplot(salmee ~ ddipl, data = df, outline = F,xaxt = "n",
 title(main=paste("salaire mensuel en fonction du diplôme","\n",sep=""),cex.main=1)
 title(main=paste("\n","moyenne sur toutes les années",sep=""),cex.main=0.8)
 text(seq(1,6,by=1), 
-     srt = 60, adj= 1, xpd = TRUE,-300,
+     srt = 60, adj= 1, xpd = TRUE,
      labels = ddipl_lib[-1], cex=0.65)
 
 

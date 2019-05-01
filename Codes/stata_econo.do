@@ -4,7 +4,8 @@ drop _all // Effacer toutes les variables
 
 //ctrl + D pour executer ligne de commande sélectionnée
 
-cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
+//cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
+cd "C:/Users/Hugues/Desktop/Cours Ensae/econo"
 insheet using "table_finale.csv", clear // Pour ouvrir un fichier .raw ou .csv
 
 //cd "C:\Users\Clement\Desktop\Projet Économétrie 2\Données"
