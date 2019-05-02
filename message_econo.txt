@@ -1,0 +1,12 @@
+Du coup petit point : 
+- j'ai commencé la rédaction, dis moi ce que tu en penses, notamment pour la question 5
+- j'ai actualisé le salaire en euros de 2013, on semble se rapprocher plus de ce qu'a le prof question 6. J'ai gardé les 
+  deux et j'ai fait en sorte que ce soit visible dans le code l'endroit où je l'ai fait (c'est dans construction table). 
+  Je pense qu'il faudra au moins le mentionner, ça joue pas tous les ans mais il y a des négociations salariales tous les 
+  3 ans il me semble (à vérifier), donc sur 10 ans ça doit jouer quand même (jusqu'à 20 % de différence entre euro 2003
+  et 2014).
+- pour la rédaction, on met les sorties stata ? Il faudra relancer à la fin pour mettre les bonnes valeurs
+- j'ai rajouté taux chômage (j'avais pas vu que tu l'avais fait), espérance de vie et nombre d'élèves ayant un an de 
+  retard en 6ème. Je te joins le fichier csv departements où elles sont. Bizaremment le nombre d'élève avec du retard 
+  est le seul significatif (la p-value est même de 0 dans question 7), pour les autres non-significatifs même à 10 %.
+ 
