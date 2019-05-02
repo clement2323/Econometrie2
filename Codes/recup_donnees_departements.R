@@ -39,5 +39,5 @@ departement = merge(departement, taux_chom, by = 'num')
 departement
 
 fwrite(departement,paste0(path,"/departements.csv"))
-write.dta(departement,paste0(path,"/departements.csv"))
+write.dta(departement,paste0(path,"/departements.dta"))
 

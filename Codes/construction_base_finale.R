@@ -2,13 +2,22 @@ rm(list=ls())
 gc()
 library(data.table)
 library(readstata13)
-#je source les libellés de variables
-source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
 
+#je source les libellés de variables
+#source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
+source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
 #########################################
 ####Liste des des variables par thème####
 #########################################
  
+#=======================================
+#Je rajoute : 
+# - actualisation en euro 2013 (du coup faut tout relancer pour salmet)
+# - taux chomage, retard 6eme (nb eleves avec 1 an retard en 6eme) et esp vie
+#   des departements (j'avais pas vu que tu avais deja mis le chomage aha)
+departements = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/departements.csv')
+
+
 
 ####champ de l'étude#### L'individu est délimité par ident noi
 # 
@@ -113,7 +122,8 @@ variable<-c("actop","annee","ident","noi","noicon","stat2","stc","trim",
             "cite97","datdip","datgen","datsup","ddipl","dip","dip11","dipdet","fordat","formoi","forsg","ngen","nivet","spe")
 
 
-path = "C:/Users/Clement/Desktop/Projet Économétrie 2/Données"
+#path = "C:/Users/Clement/Desktop/Projet Économétrie 2/Données"
+path = "C:/Users/Hugues/Desktop/Cours Ensae/econo/nouvelles_donnees"
 files = list.files(path)
 # variables = c("annee","trim","ag","salmee","salmet","datdip","datgen","datsup","ddipl","deparc","depeta")
 
@@ -164,7 +174,7 @@ table_finale$naia<-as.integer(table_finale$naia)
 #expérience potentielle = expérience pro qu'aurait eu quelqu'un si il avait travailler toute sa vie en dehors de ses années d'études et de sa prime enfance
 #= âge -annéesétudes (de 6ans à...) -6  # pour annee etude on fait ça à l'arrache car  datgen et datsup donnet des valeurs aberrantes
 
-# ("1" = 23,"3" = 20,"4" = 18,"5" = 17,"6" = 14,"7" = 14) # on va approxmer pour les études courtes, pour le sup on utilise datdip et datsup
+# ("1" = 23,"3" = 20,"4" = 18,"5" = 17,"6" = 14,"7" = 14) # on va approximer pour les études courtes, pour le sup on utilise datdip et datsup
 dip_vers_annee_etude<-setNames(c(17, 14, 12, 11, 8, 8),c(1,3,4,5,6,7))
 table_finale$annee_etude<-dip_vers_annee_etude[table_finale$ddipl]
 
@@ -188,6 +198,39 @@ table_finale$salmet[table_finale$salmet=="8" & !(table_finale$annee %in% c("2013
 chiffre_vers_lettre<-setNames(c("A","B","C","D","E","F","G","H","I","J"),seq(1,10))
 table_finale$salmet[table_finale$annee %in% c("2013","2014")] <-chiffre_vers_lettre[table_finale$salmet[table_finale$annee %in% c("2013","2014")]]
 
+#les départements, infos dep + je me cantonne à la france métropolitaine
+table_finale[table_finale$deparc=="",]$deparc<-ifelse(table_finale[table_finale$deparc=="",]$annee %in% c("2013","2014"),table_finale[table_finale$deparc=="",]$edep,table_finale$dep)
+table_finale$deparc[table_finale$deparc %in% c("97","99","9A","9B","9C","9D","9E","9F","9K")]<-"97"
+table_finale$deparc[table_finale$deparc==""]<-"97" #Je mets dans 97 les 4000 non renseignés et (avec les dom)"
+#table(table_finale$deparc)
+
+#=========actualisation==========
+#actualisation en euro 2013 (jusqu'a 1.18 de diff -> vaut le coup)
+actu_eur2013<-setNames(c(1.00, 1.00, 1.01, 1.03, 1.05, 1.07, 1.07, 1.10, 1.11, 1.13, 1.15, 1.18),2014:2003)
+table_finale$actu_eur13 = actu_eur2013[as.character(table_finale$annee)]
+table_finale$salmee<-as.numeric(table_finale$salmee)
+table_finale$salmee_actu <- table_finale$salmee * table_finale$actu_eur13
+
+
+
+#deparc change en depeta
+#table_finale$deparc <- ifelse(table_finale$deparc == "", table_finale$depeta, table_finale$deparc)
+
+#ret6m : retard d'un an en sixième
+ret = setNames(as.character(departements$ret_6m), departements$num)
+table_finale$ret6m <- ret[as.character(table_finale$deparc)]
+
+#esp de vie
+esp = setNames(as.character(departements$esp_vie), departements$num)
+table_finale$esp_vie <- esp[as.character(table_finale$deparc)]
+
+#moyenne chomage sur annees 2003 2014
+chom = setNames(as.character(departements$chomage_moy), departements$num)
+table_finale$tx_chomage <- chom[as.character(table_finale$deparc)]
+
+# fin ajouts
+# ================================================
+
 
 ##recodage de salmet, je le renseigne pour les lignes qui ont répondu au salaire mais dont la tranche n'est de fait pas renseignée
 #table(table_finale$salmet)
@@ -203,6 +246,18 @@ table_finale$salmet<-ifelse(is.na(table_finale$salmee),table_finale$salmet,
                                                                       ifelse(table_finale$salmee<3000,"G",
                                                                              ifelse(table_finale$salmee<5000,"H",
                                                                                     ifelse(table_finale$salmee<8000,"I",
+                                                                                           "J"))))))))))
+
+table_finale$salmet_actu<-ifelse(is.na(table_finale$salmee_actu),table_finale$salmet,
+                            ifelse(table_finale$salmee_actu<500,"A",
+                                   ifelse(table_finale$salmee_actu<1000,"B",
+                                          ifelse(table_finale$salmee_actu<1250,"C",
+                                                 ifelse(table_finale$salmee_actu<1500,"D",
+                                                        ifelse(table_finale$salmee_actu<2000,"E",
+                                                               ifelse(table_finale$salmee_actu<2500,"F",
+                                                                      ifelse(table_finale$salmee_actu<3000,"G",
+                                                                             ifelse(table_finale$salmee_actu<5000,"H",
+                                                                                    ifelse(table_finale$salmee_actu<8000,"I",
                                                                                            "J"))))))))))
 
 
@@ -222,7 +277,7 @@ dip_nomme<-setNames(c("master et plus","master et plus",
                  "diplôme pro","diplôme pro","sans diplôme","sans diplôme","sans diplôme")
                ,c(10,12,21,22,30,31,32,33,41,42,43,44,50,60,70,71))
                
-#J'appelle les variables commes dans le modele de la question 7
+#J'appelle les variables comme dans le modele de la question 7
 table_finale$sit_ind<-dip_nomme[table_finale$dip]
 #à revoir plus tard
 
@@ -244,27 +299,23 @@ table_finale$cspm[table_finale$cspm=="7"]<-"1"
 # reproduction sociale
 # round(prop.table(table(table_finale$cspp,table_finale$sit_ind),1)*100,0)
 
-#les départements, infos dep + je me cantonne à la france métropolitaine
-table_finale[table_finale$deparc=="",]$deparc<-ifelse(table_finale[table_finale$deparc=="",]$annee %in% c("2013","2014"),table_finale[table_finale$deparc=="",]$edep,table_finale$dep)
-table_finale$deparc[table_finale$deparc %in% c("97","99","9A","9B","9C","9D","9E","9F","9K")]<-"97"
-table_finale$deparc[table_finale$deparc==""]<-"97" #Je mets dans 97 les 4000 non renseignés et (avec les dom)"
-#table(table_finale$deparc)
+
 
 #chomage par département, provient des données insee du RP2015 
 
-chomage_dep<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/chomage_dep.csv")
-chomage_dep$dep<-substr(chomage_dep$dep,1,2)
+#chomage_dep<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/chomage_dep.csv")
+#chomage_dep$dep<-substr(chomage_dep$dep,1,2)
 
-dep_vers_taux_chom<-sapply(split(chomage_dep[,c("homme_chomeur","femme_chomeur","homme_emploi","femme_emploi")],chomage_dep$dep),function(x){
+#dep_vers_taux_chom<-sapply(split(chomage_dep[,c("homme_chomeur","femme_chomeur","homme_emploi","femme_emploi")],chomage_dep$dep),function(x){
 # x<-split(chomage_dep[,c("homme_chomeur","femme_chomeur","homme_emploi","femme_emploi")],chomage_dep$dep)$'97'
-   x<-colSums(x)
-  unname(((x[1]+x[2])/(sum(x)))*100)
-  })
-chomage_dep$taux_chom<-(chomage_dep$homme_chomeur+chomage_dep$femme_chomeur)/(chomage_dep$homme_chomeur+chomage_dep$femme_chomeur+chomage_dep$homme_emploi+chomage_dep$femme_emploi)*100
-table_finale$taux_chom<-dep_vers_taux_chom[table_finale$deparc]
+#   x<-colSums(x)
+#  unname(((x[1]+x[2])/(sum(x)))*100)
+#  })
+#chomage_dep$taux_chom<-(chomage_dep$homme_chomeur+chomage_dep$femme_chomeur)/(chomage_dep$homme_chomeur+chomage_dep$femme_chomeur+chomage_dep$homme_emploi+chomage_dep$femme_emploi)*100
+#table_finale$taux_chom<-dep_vers_taux_chom[table_finale$deparc]
 
 #Les établissements
-etab<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/Etablissements d'enseignement superieur.csv")
+etab<-fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/Etablissements d'enseignement superieur.csv")
 etab$dep<-substr(etab$`Code département`,3,4)
 
 tmp<-lapply(split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc)),function(x){
@@ -308,8 +359,12 @@ rm(list=ls()[ls()!="table_finale"])
 #Save en Rdata et en csv
 # table_finale<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
 
-fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
-save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")
+#fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
+#save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")
+
+fwrite(table_finale,"C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv")
+save.image(file="C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.Rdata")
+
 
 rm(list=ls())
 gc()

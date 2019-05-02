@@ -22,13 +22,14 @@ browse //Affichage de labase de données dans la console
 
 //Rq : expérience potentielle = age-annee_etude-6 => exppo et année d'étude sont un peu liée mais l'âge les délie. ça revient à faire âge et année d'étude..
 gen log_salmee = log(salmee)
-
+gen log_salmee_actu = log(salmee_actu)
+gen femme = (sexe ==2)
 //Dans toute la suite, on fera fit du fait que les valeurs manquantes pour la variable explicative sont forcément liées aux valeurs de ces dernières
 // faire peut etre une stat pour voir que les plus diplomés sont les plus riches et aussi ceux qui repondent le moins souvent ?
 
 //Reg naive en empilant tout et ne respectant rien
 //Q 4
-reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude
+reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude //c.femme
 //une année d'étude augmente le salaire de 0.1 %
 //l'exp potentielle joue à hauteur de Bex_p +2 B_exp^2, une année d'expérience potentielle augmente le salaire de 0.048 %
 // sans biais si les variables explicatives sont exogènes au bruit et ?? à revoir
@@ -56,11 +57,17 @@ gen borne_inf = log(500)*(salmet=="B")+log(1000)*(salmet=="C")+log(1250)*(salmet
 
 gen borne_sup = log(500)*(salmet=="A")+log(1000)*(salmet=="B")+log(1250)*(salmet=="C")+log(1500)*(salmet=="D")+log(2000)*(salmet=="E")+log(2500)*(salmet=="F")+log(3000)*(salmet=="G")+log(5000)*(salmet=="H")+log(8000) * (salmet == "I") if salmet !="J" & salmet!="98" & salmet !=""
 //en faisant
+
+gen borne_inf_actu = log(500)*(salmet_actu=="B")+log(1000)*(salmet_actu=="C")+log(1250)*(salmet_actu=="D")+log(1500)*(salmet_actu=="E")+log(2000)*(salmet_actu=="F")+log(2500)*(salmet_actu=="G")+log(3000)*(salmet_actu=="H")+log(5000)*(salmet_actu=="I")+log(8000) * (salmet_actu == "J") if salmet_actu !="A" & salmet_actu!="98" & salmet_actu !=""
+
+gen borne_sup_actu = log(500)*(salmet_actu=="A")+log(1000)*(salmet_actu=="B")+log(1250)*(salmet_actu=="C")+log(1500)*(salmet_actu=="D")+log(2000)*(salmet_actu=="E")+log(2500)*(salmet_actu=="F")+log(3000)*(salmet_actu=="G")+log(5000)*(salmet_actu=="H")+log(8000) * (salmet_actu == "I") if salmet_actu !="J" & salmet_actu!="98" & salmet_actu !=""
+
 char ddipl[omit] 7 
 // on impose que la oda de référence soit le 7 sans diplôme
-gen femme = (sexe ==2)
 
 xi : intreg borne_inf borne_sup c.exp_po c.exp_po#c.exp_po femme i.ddipl
+
+xi : intreg borne_inf_actu borne_sup_actu c.exp_po c.exp_po#c.exp_po femme i.ddipl
 		
 tabulate ddipl // ddipl1 c'est le diplome du sup
 //Comme dans le cours on pourrait faire un modèle polytomique ordonné sans seuil connus pour vérifier 
@@ -70,6 +77,8 @@ tabulate ddipl // ddipl1 c'est le diplome du sup
 //regarder les Td pour l'interprétaztion des coeffs on peut certainement interpréter les rapport de coeff et le signe des coeffs.
 // sinon revenir au modèle 0 1 en regardant P(Y<k) plutot que P(y=k) et dériver.
 // ce n'est pas un logit..
+
+// Hello Clément, on peut interpréter les coefs quantitativement normalement !!
 
 
 //essayer les effets marginaux à la moyenne et l'effer marginal moyen car sinon l'effet marginal dépend du vecteur xi
@@ -93,19 +102,20 @@ egen sit_ind_c=group(sit_ind)
 tabulate sit_ind sit_ind_c
 
 //i.nbagenf  ne donne pas grand chose la variable typ men est plus agrégée on risque de voir plus d'effets dedans
-reg log_salmee i.sit_ind_c taux_dip_dep taux_chom femme immigre i.typmen c.ag c.ag#c.ag
+reg log_salmee i.sit_ind_c taux_dip_dep femme immigre i.typmen c.ag c.ag#c.ag ret6m //tx_chomage esp_vie pas significatives (sauf à 20 % pour esp_vie) 
 //l'effet de l'âge sur le diplôme est positif mais diminue l'âge augmente quand ce dernier augmente normal, yes?
 //le bac est la modalité de référence ici on voit que le gradient de salaire suit celui du diplôme
 // le nbagenfant est croissant avec le nombre d'enfant, peu d'effet sur salaire et le fait d'avoir des enfants semble jouer possitivement sur le salaire..
 //le fait d'être immigré joue négativement sur le salaire, à diplôme égal..
 // tout le monde est mieux rémunéré que le ménage à une personne..on fait pas d'enfant quand on a rien ? je me serai attendu à une idée de sacrifice des études du fait d'avoir des enfants
 //peut être faut il faire intéragir femme et type ménage pour voir un effet négatif.
-reg log_salmee i.sit_ind_c taux_dip_dep taux_chom femme i.typmen femme#i.typmen immigre c.ag c.ag#c.ag i.cspp 
+
+reg log_salmee i.sit_ind_c taux_dip_dep femme i.typmen femme#i.typmen immigre c.ag c.ag#c.ag i.cspp ret6m
 //Question je n'ai pas mis la variable cser ici (csp de l'enquêtée) car elle est directement reliée au salaire, totologique si la csp du mec bouge alors c'est qu'il avait des aptitudes lemploi occupé explique le salaire?
 //la csp non renseignée 0 est celle qui donne les effets les plus positifs sur le salaire, dur à interpréter
 // effet du taux de chomage sur le ssalaire positif ?? très bizarre (effet très faible)
 
-tabulate(cspp)
+//tabulate(cspp)
 //boum là on voit que les femmes avec enfant prennent des malus au niveau du salaire, c'est l'intéracton qui craint, un homme avec enfant ça change pas grand chose.
 
 //Question 9
