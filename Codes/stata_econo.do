@@ -23,7 +23,7 @@ browse //Affichage de labase de données dans la console
 //Rq : expérience potentielle = age-annee_etude-6 => exppo et année d'étude sont un peu liée mais l'âge les délie. ça revient à faire âge et année d'étude..
 gen log_salmee = log(salmee)
 gen log_salmee_actu = log(salmee_actu)
-gen femme = (sexe ==2)
+gen femme = (sexe == 2)
 //Dans toute la suite, on fera fit du fait que les valeurs manquantes pour la variable explicative sont forcément liées aux valeurs de ces dernières
 // faire peut etre une stat pour voir que les plus diplomés sont les plus riches et aussi ceux qui repondent le moins souvent ?
 
@@ -117,6 +117,39 @@ reg log_salmee i.sit_ind_c taux_dip_dep femme i.typmen femme#i.typmen immigre c.
 
 //tabulate(cspp)
 //boum là on voit que les femmes avec enfant prennent des malus au niveau du salaire, c'est l'intéracton qui craint, un homme avec enfant ça change pas grand chose.
+
+
+
+
+// VI : 
+// tests condition de rang :
+
+// pour diplome global
+gen etab_sum = institut_universitaire_de_techno + institut_universitaire_professio + universit + composante_universitaire
+correlate taux_dip_dep ret6m tx_chomage esp_vie 
+correlate taux_dip_dep etab_sum institut_universitaire_de_techno institut_universitaire_professio universit composante_universitaire
+// esp_vie semble le meilleur instrument pour taux_dip_dep (correlation à 0.52), vient ensuite composante_universitaire puis etab_sum (corr de 0.45)
+// on va pouvoir tester notre modèle, et en plus très bien parce que ces variables sont pas dans notre modèle.
+
+// On fait des 2MC tout d'abord
+ivregress 2sls log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre c.ag c.ag#c.ag i.cspp ret6m (taux_dip_dep = esp_vie), first
+ivregress 2sls log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre c.ag c.ag#c.ag i.cspp ret6m (taux_dip_dep = etab_sum), first
+// On obtient sensiblement même chose que tout à l'heure en plus faible mais intervalle confiance plus étendu.
+
+
+// Pb : comment on fait différences premières avec nos données ???
+// gen log_salmee_1stdif = 
+
+
+// pour diplome individuel
+correlate annee_etude naim cspp cspm
+// mois naissance = instrument très très faible, 
+// on peut penser à ANCCHOMM (temps au chômage en mois), CSTOTR et CSP, ASSOCI (prend part aux décisions), CONGJ/CONGJR selon l'annee (nombre jours congé), 
+// CSTOTPRMCJ ou CSTOTCJ selon annee(études du conjoint de la personne de référence du ménage --> personne interrogée ??)
+
+
+
+
 
 //Question 9
 
