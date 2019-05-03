@@ -15,7 +15,7 @@ source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
 # - actualisation en euro 2013 (du coup faut tout relancer pour salmet)
 # - taux chomage, retard 6eme (nb eleves avec 1 an retard en 6eme) et esp vie
 #   des departements (j'avais pas vu que tu avais deja mis le chomage aha)
-departements = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/departements.csv')
+departements = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/departements.csv')
 
 
 
@@ -116,8 +116,8 @@ departements = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/departements.csv
 variable<-c("actop","annee","ident","noi","noicon","stat2","stc","trim",
             "ancentr","art","contra","dchant","dudet","efen","efet","naf","titc","trefen","trefet",
             "ag","cohab","cse","csei","cser","cspm","cspp","cstot","matri","naia","naim","nat14","nat28","nbactoc","nbageenfa","nbagenf","scj","sexe","so","typmen5","typmen7","typmen21","typmen15",
-            "deparc","depeta","reg","dep","edep",
-            "prim","revent","salmee","salmet","salred",
+            "deparc","depeta","reg","dep","edep","ancchomm","cstotr","associ",
+            "prim","revent","salmee","salmet","salred","congj","congjr","cstotcj","cstotprmcj",
             "emphre","emphnh","hhc","hhc6","jourtr","nbheur","nbhp","sousempl","tpp",
             "cite97","datdip","datgen","datsup","ddipl","dip","dip11","dipdet","fordat","formoi","forsg","ngen","nivet","spe")
 
@@ -125,10 +125,9 @@ variable<-c("actop","annee","ident","noi","noicon","stat2","stc","trim",
 #path = "C:/Users/Clement/Desktop/Projet Économétrie 2/Données"
 path = "C:/Users/Hugues/Desktop/Cours Ensae/econo/nouvelles_donnees"
 files = list.files(path)
-# variables = c("annee","trim","ag","salmee","salmet","datdip","datgen","datsup","ddipl","deparc","depeta")
 
 
-#Pour l'instant jej dégage la grosse table des vieilles années trop lourdes.
+#Pour l'instant je dégage la grosse table des vieilles années trop lourdes.
 fichier<-lapply(files[-c(1)],function(f){
   #f<-files[length(files)]
   data = read.dta13(paste0(path,"/",f))
@@ -168,6 +167,11 @@ table_finale$datgen<-as.integer(table_finale$datgen)
 table_finale$datsup<-as.integer(table_finale$datsup)
 table_finale$ag<-as.integer(table_finale$ag)
 table_finale$naia<-as.integer(table_finale$naia)
+
+# ===
+table_finale$congj = ifelse(is.na(table_finale$congj), table_finale$congjr, table_finale$congj)
+table_finale$cstotcj = ifelse(is.na(table_finale$cstotcj), table_finale$cstotprmcj, table_finale$cstotcj)
+# ===
 
 
 #nombre années études j'abandonne l'idée d'utiliser datsup dat gen datdip
@@ -329,6 +333,30 @@ row.names(tmp2)<-names(tmp)
 
 table_finale<-cbind(table_finale,tmp2[paste0(table_finale$annee,"_",table_finale$deparc),])
 #pour chaque département x année j'ai donc le nombre d'école de chaque type qui était ouvertes
+
+
+# =========================
+#j'ajoute la creation d'etablissement sup (somme sur tous types)
+etab_recent = etab[etab$Date >= 2003,]
+crea_etab = aggregate(etab_recent$dep, by = etab_recent[, c('Date','dep')], length)
+crea_etab$annee_deparc = paste0(crea_etab$Date,"_",crea_etab$dep)
+crea_etab = setNames(crea_etab$x, crea_etab$annee_deparc)
+
+table_finale$annee_deparc = paste0(table_finale$annee,"_",table_finale$deparc)
+table_finale$crea_etab <- crea_etab[table_finale$annee_deparc]
+table_finale[is.na(table_finale$crea_etab),]$crea_etab <- 0
+
+
+# salaire horaire et log salaire
+# problème, beaucoup de NA dans nbheur (46000 / 140000 sur ce qu'on garde - là où pas de NA
+# dans salmee/salmet etc) donc peut fiable
+df[df$nbheur < 40]$nbheur <- 40
+df$nbheur = ifelse(df$nbheur > 250 | is.na(df$nbheur), 150, df$nbheur)
+df$salhor = df$salmee / df$nbheur
+
+df$log_salmee = log(df$salmee)
+df$log_salhor = log(df$salhor)
+# =========================
 
 #pour chaque département x année je calcule le pourcentage de diplômés du supérieur
 table_finale$taux_dip_dep<-sapply(split(table_finale$sit_ind,paste0(table_finale$annee,"_",table_finale$dep)),function(x){

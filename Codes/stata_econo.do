@@ -21,8 +21,7 @@ browse //Affichage de labase de données dans la console
 
 
 //Rq : expérience potentielle = age-annee_etude-6 => exppo et année d'étude sont un peu liée mais l'âge les délie. ça revient à faire âge et année d'étude..
-gen log_salmee = log(salmee)
-gen log_salmee_actu = log(salmee_actu)
+//gen log_salmee = log(salmee) mtn je crée cette variable avant
 gen femme = (sexe == 2)
 //Dans toute la suite, on fera fit du fait que les valeurs manquantes pour la variable explicative sont forcément liées aux valeurs de ces dernières
 // faire peut etre une stat pour voir que les plus diplomés sont les plus riches et aussi ceux qui repondent le moins souvent ?
@@ -53,21 +52,16 @@ reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude //c.femme
 //Rq : dans le cours chapitre 4 on a déjà le code, le prof pose rgi ==1 pour fixer le rang d'interrogation de lindiv à 1 ie à sa première interrogation (il y en a 6 au total) certaines ariables ne sont dspo que pour certains rangs.
 //Il ne faut pas oublier de filtrer les 15 65 ans aussi !
 
+// Message Clément : ici on pourra aussi voir ce que ça donne avec salaire actualisé et salaire horaire.
 gen borne_inf = log(500)*(salmet=="B")+log(1000)*(salmet=="C")+log(1250)*(salmet=="D")+log(1500)*(salmet=="E")+log(2000)*(salmet=="F")+log(2500)*(salmet=="G")+log(3000)*(salmet=="H")+log(5000)*(salmet=="I")+log(8000) * (salmet == "J") if salmet !="A" & salmet!="98" & salmet !=""
 
 gen borne_sup = log(500)*(salmet=="A")+log(1000)*(salmet=="B")+log(1250)*(salmet=="C")+log(1500)*(salmet=="D")+log(2000)*(salmet=="E")+log(2500)*(salmet=="F")+log(3000)*(salmet=="G")+log(5000)*(salmet=="H")+log(8000) * (salmet == "I") if salmet !="J" & salmet!="98" & salmet !=""
 //en faisant
 
-gen borne_inf_actu = log(500)*(salmet_actu=="B")+log(1000)*(salmet_actu=="C")+log(1250)*(salmet_actu=="D")+log(1500)*(salmet_actu=="E")+log(2000)*(salmet_actu=="F")+log(2500)*(salmet_actu=="G")+log(3000)*(salmet_actu=="H")+log(5000)*(salmet_actu=="I")+log(8000) * (salmet_actu == "J") if salmet_actu !="A" & salmet_actu!="98" & salmet_actu !=""
-
-gen borne_sup_actu = log(500)*(salmet_actu=="A")+log(1000)*(salmet_actu=="B")+log(1250)*(salmet_actu=="C")+log(1500)*(salmet_actu=="D")+log(2000)*(salmet_actu=="E")+log(2500)*(salmet_actu=="F")+log(3000)*(salmet_actu=="G")+log(5000)*(salmet_actu=="H")+log(8000) * (salmet_actu == "I") if salmet_actu !="J" & salmet_actu!="98" & salmet_actu !=""
-
 char ddipl[omit] 7 
 // on impose que la oda de référence soit le 7 sans diplôme
 
 xi : intreg borne_inf borne_sup c.exp_po c.exp_po#c.exp_po femme i.ddipl
-
-xi : intreg borne_inf_actu borne_sup_actu c.exp_po c.exp_po#c.exp_po femme i.ddipl
 		
 tabulate ddipl // ddipl1 c'est le diplome du sup
 //Comme dans le cours on pourrait faire un modèle polytomique ordonné sans seuil connus pour vérifier 
@@ -121,6 +115,7 @@ reg log_salmee i.sit_ind_c taux_dip_dep femme i.typmen femme#i.typmen immigre c.
 
 
 
+////////////////////////////////
 // VI : 
 // tests condition de rang :
 
@@ -137,16 +132,70 @@ ivregress 2sls log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre c.ag
 // On obtient sensiblement même chose que tout à l'heure en plus faible mais intervalle confiance plus étendu.
 
 
-// Pb : comment on fait différences premières avec nos données ???
-// gen log_salmee_1stdif = 
-
-
 // pour diplome individuel
 correlate annee_etude naim cspp cspm
 // mois naissance = instrument très très faible, 
-// on peut penser à ANCCHOMM (temps au chômage en mois), CSTOTR et CSP, ASSOCI (prend part aux décisions), CONGJ/CONGJR selon l'annee (nombre jours congé), 
+// on peut penser à ANCCHOMM (temps au chômage en mois), CSTOTR et CSPP, ASSOCI (prend part aux décisions), CONGJ/CONGJR selon l'annee (nombre jours congé), 
 // CSTOTPRMCJ ou CSTOTCJ selon annee(études du conjoint de la personne de référence du ménage --> personne interrogée ??)
 
+
+//////////////////////////////////
+//Pour les first dif :
+// Obliger de prendre l'autre table
+clear all
+drop _all
+
+//cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
+cd "C:/Users/Hugues/Desktop/Cours Ensae/econo"
+insheet using "first_dif.csv", clear 
+//Dans cette table, logsalmee est la dif sur 2 années pour les individus présents
+// logsalhor est la même chose pour salaire horaire (on a pas tout le temps le salaire horaire exact mais on s'en approche ici qd même)
+// je pense qu'on peut laisser les variables qualitatives telles qu'elles
+
+
+egen sit_ind_c=group(sit_ind)
+gen femme = (sexe == 2)
+gen dif_log_salmee = real(logsalmee)
+gen dif_log_salhor = real(logsalhor)
+
+browse
+
+correlate taux_dip_dep crea_etab // c'est très très nul comme VI
+
+reg dif_log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre i.cspp taux_dip_dep // bcp trop de variables pour nb observations
+reg dif_log_salmee femme immigre taux_dip_dep //on garde un minimum de variables quali et parfait  !!!! taux_dip_dep significatif, effet de un peu moins de 1 % sur salaire
+reg dif_log_salmee taux_dip_dep // 
+
+ivregress 2sls dif_log_salmee (taux_dip_dep = crea_etab), first //bon là par contre ça donne n'importe quoi
+
+//Du coup en résumé instrumentaliser tout seul c'est bon, first dif tout seul c'est bon aussi, les deux c'est le bordel.
+//Au moins les deux indiquent qu'augmentation du tx diplômés aboutit à augmentation salaire
+
+
+
+
+// Question 10
+// on revient avec table précédente
+clear all
+drop _all
+
+//cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
+cd "C:/Users/Hugues/Desktop/Cours Ensae/econo"
+insheet using "table_finale.csv", clear
+
+gen etab_sum = institut_universitaire_de_techno + institut_universitaire_professio + universit + composante_universitaire
+egen sit_ind_c=group(sit_ind)
+gen femme = (sexe == 2)
+
+browse
+// On a déjà instruments pour taux diplômés (espérance de vie puis composante_universitaire)
+// Reste à trouver instruments pour niveau diplôme individuel.
+
+//naim mois naissance
+correlate annee_etude naim hhc tpp //cspp, ancchomm et associ tout le temps NA, cstotr en fait cest bete, congj cstotcj mauvaise idée aussi.
+// correlation mois de naissance très très faible
+// hhc (nb heures travaillee) semble deja meilleur, tpp c'est à peu près la même variable mais moins bien.
+// après nb heures travaillees c'est sans doute pas très exogène comme instrument.
 
 
 
