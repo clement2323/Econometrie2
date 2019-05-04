@@ -141,35 +141,44 @@ correlate annee_etude naim cspp cspm
 
 //////////////////////////////////
 //Pour les first dif :
-// Obliger de prendre l'autre table
 clear all
 drop _all
 
 //cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
 cd "C:/Users/Hugues/Desktop/Cours Ensae/econo"
 insheet using "first_dif.csv", clear 
-//Dans cette table, logsalmee est la dif sur 2 années pour les individus présents
-// logsalhor est la même chose pour salaire horaire (on a pas tout le temps le salaire horaire exact mais on s'en approche ici qd même)
+// logsalhor salaire horaire (on a pas tout le temps le salaire horaire exact mais on s'en approche ici qd même)
 // je pense qu'on peut laisser les variables qualitatives telles qu'elles
-
-
 egen sit_ind_c=group(sit_ind)
 gen femme = (sexe == 2)
-gen dif_log_salmee = real(logsalmee)
-gen dif_log_salhor = real(logsalhor)
+gen dif_log_salmee = real(dif_logsalmee)
+gen dif_log_salhor = real(dif_logsalhor)
 
 browse
 
-correlate taux_dip_dep crea_etab // c'est très très nul comme VI
+// Question 5
 
-reg dif_log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre i.cspp taux_dip_dep // bcp trop de variables pour nb observations
-reg dif_log_salmee femme immigre taux_dip_dep //on garde un minimum de variables quali et parfait  !!!! taux_dip_dep significatif, effet de un peu moins de 1 % sur salaire
-reg dif_log_salmee taux_dip_dep // 
+// Test d'exogénéité stricte
+// on inclut les X de l'année 2 + différences de taux diplômé département
+//annee_etude2 = année d'étude sur t+1
+reg dif_log_salmee annee_etude_tplus1 exp_po_tplus1 dif_taux_dip_dep taux_dip_dep_tplus1
+// on trouve que taux_dip_dep_tplus1 est significatif --> on va devoir l'instrumenter
 
-ivregress 2sls dif_log_salmee (taux_dip_dep = crea_etab), first //bon là par contre ça donne n'importe quoi
 
-//Du coup en résumé instrumentaliser tout seul c'est bon, first dif tout seul c'est bon aussi, les deux c'est le bordel.
-//Au moins les deux indiquent qu'augmentation du tx diplômés aboutit à augmentation salaire
+// Question 9
+correlate dif_taux_dip_dep crea_etab // c'est très très nul comme VI
+correlate dif_taux_dip_dep crea_4_6dernieres crea_5_10dernieres crea_5dernieres crea_10dernieres // c'est déjà 10 fois mieux mais toujours pas folichon
+correlate dif_taux_dip_dep taux_dip_dep_t //semble beaucoup mieux marcher, la corrélation à 0.25 en est même suspecte
+
+
+// reg dif_log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre i.cspp taux_dip_dep // bcp trop de variables pour nb observations
+reg dif_log_salmee femme immigre taux_dip_dep //on garde un minimum de variables quali
+reg dif_log_salmee taux_dip_dep // taux_dip_dep significatif (augmentation taux diplômés), effet de un peu moins de 1 % sur salaire , on est content
+
+gen Inst1 = - taux_dip_dep_t
+correlate dif_taux_dip_dep Inst1
+ivregress 2sls dif_log_salmee (dif_taux_dip_dep = Inst1) //on obtient quelque chose de propre mais on obtient le mauvais signe, c'est sensé être positif....
+ivregress 2sls dif_log_salmee (dif_taux_dip_dep = crea_4_6dernieres) //ici on obtient qqch de positif mais significatif qu'à 10%
 
 
 

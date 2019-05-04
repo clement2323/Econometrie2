@@ -1,4 +1,9 @@
-//******TD1*******//
+
+
+// Autant enlever ce do.file
+// Je fais ça sur l'autre do.file finalement, on a besoin de la table first_dif crée pour la partie 2
+
+
 clear all // Tout syupprimer, code et variables
 drop _all // Effacer toutes les variables 
 
