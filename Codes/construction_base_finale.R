@@ -350,12 +350,12 @@ table_finale[is.na(table_finale$crea_etab),]$crea_etab <- 0
 # salaire horaire et log salaire
 # problème, beaucoup de NA dans nbheur (46000 / 140000 sur ce qu'on garde - là où pas de NA
 # dans salmee/salmet etc) donc peut fiable
-df[df$nbheur < 40]$nbheur <- 40
-df$nbheur = ifelse(df$nbheur > 250 | is.na(df$nbheur), 150, df$nbheur)
-df$salhor = df$salmee / df$nbheur
+table_finale[table_finale$nbheur < 40]$nbheur <- 40
+table_finale$nbheur = ifelse(table_finale$nbheur > 250 | is.na(table_finale$nbheur), 150, table_finale$nbheur)
+table_finale$salhor = table_finale$salmee / table_finale$nbheur
 
-df$log_salmee = log(df$salmee)
-df$log_salhor = log(df$salhor)
+table_finale$log_salmee = log(table_finale$salmee)
+table_finale$log_salhor = log(table_finale$salhor)
 # =========================
 
 #pour chaque département x année je calcule le pourcentage de diplômés du supérieur

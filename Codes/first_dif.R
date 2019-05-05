@@ -16,12 +16,6 @@ df = df[!is.na(df$ddipl) & !is.na(df$salmee) & !(df$salmee %in% c(9999998,999999
 ## instrumentaliser l'augmentation du taux de diplômés (?)
 
 df_final = list()
-df[df$nbheur < 40]$nbheur <- 40
-df$nbheur = ifelse(df$nbheur > 250 | is.na(df$nbheur), 150, df$nbheur)
-df$salhor = df$salmee / df$nbheur
-
-df$logsalmee = log(df$salmee)
-df$logsalhor = log(df$salhor)
 
 for (i in 2003:2013){
   dfbis = df[df$annee >=i & df$annee <= (i+1),]
@@ -135,4 +129,3 @@ names(df_final) [1] <- "dif_logsalhor"
 names(df_final)
 
 fwrite(df_final, "C:/Users/Hugues/Desktop/Cours Ensae/econo/first_dif.csv")
-

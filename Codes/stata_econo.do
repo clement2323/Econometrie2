@@ -21,14 +21,19 @@ browse //Affichage de labase de données dans la console
 
 
 //Rq : expérience potentielle = age-annee_etude-6 => exppo et année d'étude sont un peu liée mais l'âge les délie. ça revient à faire âge et année d'étude..
-//gen log_salmee = log(salmee) mtn je crée cette variable avant
+
+//bon la la raison pour laquelle stata interprète log_salmee comme str et salmee comme num m'échappe
+drop log_salmee
+gen log_salmee = log(salmee)
+drop log_salhor
+gen log_salhor = log(salhor)
 gen femme = (sexe == 2)
 //Dans toute la suite, on fera fit du fait que les valeurs manquantes pour la variable explicative sont forcément liées aux valeurs de ces dernières
 // faire peut etre une stat pour voir que les plus diplomés sont les plus riches et aussi ceux qui repondent le moins souvent ?
 
 //Reg naive en empilant tout et ne respectant rien
 //Q 4
-reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude //c.femme
+reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude femme // on obtient bien qcch de cohérent, et même chose dans littérature
 //une année d'étude augmente le salaire de 0.1 %
 //l'exp potentielle joue à hauteur de Bex_p +2 B_exp^2, une année d'expérience potentielle augmente le salaire de 0.048 %
 // sans biais si les variables explicatives sont exogènes au bruit et ?? à revoir
@@ -104,7 +109,8 @@ reg log_salmee i.sit_ind_c taux_dip_dep femme immigre i.typmen c.ag c.ag#c.ag re
 // tout le monde est mieux rémunéré que le ménage à une personne..on fait pas d'enfant quand on a rien ? je me serai attendu à une idée de sacrifice des études du fait d'avoir des enfants
 //peut être faut il faire intéragir femme et type ménage pour voir un effet négatif.
 
-reg log_salmee i.sit_ind_c taux_dip_dep femme i.typmen femme#i.typmen immigre c.ag c.ag#c.ag i.cspp ret6m
+
+reg log_salmee i.sit_ind_c taux_dip_dep femme i.typmen i.typmen#femme immigre c.ag c.ag#c.ag i.cspp ret6m
 //Question je n'ai pas mis la variable cser ici (csp de l'enquêtée) car elle est directement reliée au salaire, totologique si la csp du mec bouge alors c'est qu'il avait des aptitudes lemploi occupé explique le salaire?
 //la csp non renseignée 0 est celle qui donne les effets les plus positifs sur le salaire, dur à interpréter
 // effet du taux de chomage sur le ssalaire positif ?? très bizarre (effet très faible)
@@ -139,7 +145,7 @@ correlate annee_etude naim cspp cspm
 // CSTOTPRMCJ ou CSTOTCJ selon annee(études du conjoint de la personne de référence du ménage --> personne interrogée ??)
 
 
-//////////////////////////////////
+//
 //Pour les first dif :
 clear all
 drop _all
@@ -172,13 +178,11 @@ correlate dif_taux_dip_dep taux_dip_dep_t //semble beaucoup mieux marcher, la co
 
 
 // reg dif_log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre i.cspp taux_dip_dep // bcp trop de variables pour nb observations
-reg dif_log_salmee femme immigre taux_dip_dep //on garde un minimum de variables quali
-reg dif_log_salmee taux_dip_dep // taux_dip_dep significatif (augmentation taux diplômés), effet de un peu moins de 1 % sur salaire , on est content
+reg dif_log_salmee femme immigre dif_taux_dip_dep //on garde un minimum de variables quali
+reg dif_log_salmee dif_taux_dip_dep // taux_dip_dep significatif (augmentation taux diplômés), effet de un peu moins de 1 % sur salaire , on est content
 
-gen Inst1 = - taux_dip_dep_t
-correlate dif_taux_dip_dep Inst1
-ivregress 2sls dif_log_salmee (dif_taux_dip_dep = Inst1) //on obtient quelque chose de propre mais on obtient le mauvais signe, c'est sensé être positif....
-ivregress 2sls dif_log_salmee (dif_taux_dip_dep = crea_4_6dernieres) //ici on obtient qqch de positif mais significatif qu'à 10%
+ivregress 2sls dif_log_salmee (dif_taux_dip_dep = taux_dip_dep_t),first //on obtient quelque chose de propre mais on obtient le mauvais signe, c'est sensé être positif....
+ivregress 2sls dif_log_salmee (dif_taux_dip_dep = crea_4_6dernieres), first //ici on obtient qqch de positif mais significatif qu'à 10%
 
 
 
