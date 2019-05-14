@@ -4,8 +4,8 @@ library(data.table)
 library(readstata13)
 
 #je source les libellés de variables
-#source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
-source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
+source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
+#source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
 #########################################
 ####Liste des des variables par thème####
 #########################################
@@ -15,7 +15,9 @@ source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
 # - actualisation en euro 2013 (du coup faut tout relancer pour salmet)
 # - taux chomage, retard 6eme (nb eleves avec 1 an retard en 6eme) et esp vie
 #   des departements (j'avais pas vu que tu avais deja mis le chomage aha)
-departements = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/departements.csv')
+#departements = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/departements.csv')
+departements = fread('C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/departements.csv')
+
 
 
 
@@ -122,12 +124,11 @@ variable<-c("actop","annee","ident","noi","noicon","stat2","stc","trim",
             "cite97","datdip","datgen","datsup","ddipl","dip","dip11","dipdet","fordat","formoi","forsg","ngen","nivet","spe")
 
 
-#path = "C:/Users/Clement/Desktop/Projet Économétrie 2/Données"
-path = "C:/Users/Hugues/Desktop/Cours Ensae/econo/nouvelles_donnees"
+path = "C:/Users/Clement/Desktop/Projet Économétrie 2/Données"
+#path = "C:/Users/Hugues/Desktop/Cours Ensae/econo/nouvelles_donnees"
 files = list.files(path)
 
 
-#Pour l'instant je dégage la grosse table des vieilles années trop lourdes.
 fichier<-lapply(files[-c(1)],function(f){
   #f<-files[length(files)]
   data = read.dta13(paste0(path,"/",f))
@@ -283,16 +284,15 @@ dip_nomme<-setNames(c("master et plus","master et plus",
                
 #J'appelle les variables comme dans le modele de la question 7
 table_finale$sit_ind<-dip_nomme[table_finale$dip]
-#à revoir plus tard
+
 
 #la nationalité, variable immigr oui non si l'enquêté est issu de l'imigration
-
 table_finale$immigre<-ifelse((table_finale$annee %in% c("2013","2014") & table_finale$nat14 != 10),1,
                              ifelse(((!table_finale$annee %in% c("2013","2014"))&table_finale$nat28 != 10),1,0))
 
 
 #cser pour la csp de l'individu  
-#cspp / m pour la sp du père et de la mère, je la laisse en une position
+#cspp / m pour la csp du père et de la mère, je la laisse en une position
 table_finale$cspp<-substr(table_finale$cspp,1,1)
 table_finale$cspm<-substr(table_finale$cspm,1,1)
 
@@ -309,7 +309,7 @@ table_finale$cspm[table_finale$cspm=="7"]<-"1"
 
 #chomage_dep<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/chomage_dep.csv")
 #chomage_dep$dep<-substr(chomage_dep$dep,1,2)
-
+ 
 #dep_vers_taux_chom<-sapply(split(chomage_dep[,c("homme_chomeur","femme_chomeur","homme_emploi","femme_emploi")],chomage_dep$dep),function(x){
 # x<-split(chomage_dep[,c("homme_chomeur","femme_chomeur","homme_emploi","femme_emploi")],chomage_dep$dep)$'97'
 #   x<-colSums(x)
@@ -319,7 +319,8 @@ table_finale$cspm[table_finale$cspm=="7"]<-"1"
 #table_finale$taux_chom<-dep_vers_taux_chom[table_finale$deparc]
 
 #Les établissements
-etab<-fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/Etablissements d'enseignement superieur.csv")
+etab<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/Etablissements d'enseignement superieur.csv")
+#etab<-fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/Etablissements d'enseignement superieur.csv")
 etab$dep<-substr(etab$`Code département`,3,4)
 
 tmp<-lapply(split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc)),function(x){
@@ -332,7 +333,7 @@ tmp2<-do.call(rbind,tmp)
 row.names(tmp2)<-names(tmp)
 
 table_finale<-cbind(table_finale,tmp2[paste0(table_finale$annee,"_",table_finale$deparc),])
-#pour chaque département x année j'ai donc le nombre d'école de chaque type qui était ouvertes
+#pour chaque département x année j'ai donc le nombre d'écoles de chaque type qui était ouvertes
 
 
 # =========================
@@ -366,14 +367,7 @@ table_finale$taux_dip_dep<-sapply(split(table_finale$sit_ind,paste0(table_finale
   })[paste0(table_finale$annee,"_",table_finale$dep)]
 
 
-
-
-
-#table(table_finale$deparc)
-#je vais prendre dep en 2013,2014 et edep avant 2013 pour remplacer deparc quand on a pas l'info..
-
-# nbageenfa_lib
-# sum(table(table_finale$nbageenfa))
+#Pour que les variables de type ménage soient comparables
 table_finale$typmen7[table_finale$typmen7 %in% c(5,6,9)]<-5
 table_finale$typmen<-ifelse(table_finale$annee %in% c("2013","2014"),table_finale$typmen7,table_finale$typmen5)
 
@@ -385,13 +379,12 @@ rm(list=ls()[ls()!="table_finale"])
 #Rq à ce stade je n'ai pas filtré sur les valeurs manquantes de salaire
 
 #Save en Rdata et en csv
-# table_finale<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
 
-#fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
-#save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")
+fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
+save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")
 
-fwrite(table_finale,"C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv")
-save.image(file="C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.Rdata")
+# fwrite(table_finale,"C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv")
+# save.image(file="C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.Rdata")
 
 
 rm(list=ls())

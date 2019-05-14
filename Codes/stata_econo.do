@@ -3,9 +3,12 @@ clear all // Tout syupprimer, code et variables
 drop _all // Effacer toutes les variables 
 
 //ctrl + D pour executer ligne de commande sélectionnée
+//comande pour installer un package appelé estout permettant de mettre nos sorties directement au format latex
+. ssc install estout
 
-//cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
-cd "C:/Users/Hugues/Desktop/Cours Ensae/econo"
+
+cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
+//cd "C:/Users/Hugues/Desktop/Cours Ensae/econo"
 insheet using "table_finale.csv", clear // Pour ouvrir un fichier .raw ou .csv
 
 //cd "C:\Users\Clement\Desktop\Projet Économétrie 2\Données"
@@ -32,8 +35,11 @@ gen femme = (sexe == 2)
 // faire peut etre une stat pour voir que les plus diplomés sont les plus riches et aussi ceux qui repondent le moins souvent ?
 
 //Reg naive en empilant tout et ne respectant rien
-//Q 4
-reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude femme // on obtient bien qcch de cohérent, et même chose dans littérature
+//Q 4 //utilisation de estout pour exporter les résultats au format latex directement
+eststo clear
+eststo : reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude femme // on obtient bien qcch de cohérent, et même chose dans littérature
+esttab using "C:/Users/Clement/Desktop/Projet Économétrie 2/reg1.tex", se ar2
+
 //une année d'étude augmente le salaire de 0.1 %
 //l'exp potentielle joue à hauteur de Bex_p +2 B_exp^2, une année d'expérience potentielle augmente le salaire de 0.048 %
 // sans biais si les variables explicatives sont exogènes au bruit et ?? à revoir
@@ -59,15 +65,12 @@ reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude femme // on obtient bien
 
 // Message Clément : ici on pourra aussi voir ce que ça donne avec salaire actualisé et salaire horaire.
 gen borne_inf = log(500)*(salmet=="B")+log(1000)*(salmet=="C")+log(1250)*(salmet=="D")+log(1500)*(salmet=="E")+log(2000)*(salmet=="F")+log(2500)*(salmet=="G")+log(3000)*(salmet=="H")+log(5000)*(salmet=="I")+log(8000) * (salmet == "J") if salmet !="A" & salmet!="98" & salmet !=""
-
 gen borne_sup = log(500)*(salmet=="A")+log(1000)*(salmet=="B")+log(1250)*(salmet=="C")+log(1500)*(salmet=="D")+log(2000)*(salmet=="E")+log(2500)*(salmet=="F")+log(3000)*(salmet=="G")+log(5000)*(salmet=="H")+log(8000) * (salmet == "I") if salmet !="J" & salmet!="98" & salmet !=""
-//en faisant
 
+//en faisant
 char ddipl[omit] 7 
 // on impose que la oda de référence soit le 7 sans diplôme
-
 xi : intreg borne_inf borne_sup c.exp_po c.exp_po#c.exp_po femme i.ddipl
-		
 tabulate ddipl // ddipl1 c'est le diplome du sup
 //Comme dans le cours on pourrait faire un modèle polytomique ordonné sans seuil connus pour vérifier 
 
