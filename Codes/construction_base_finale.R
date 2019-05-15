@@ -115,7 +115,7 @@ departements = fread('C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/depart
 ###on charge les bases, on filtre sur les colonnes et les lignes
 
 #ordonnées par thèmes et ordre alphaetique dans haque thèmes
-variable<-c("actop","annee","ident","noi","noicon","stat2","stc","trim",
+variable<-c("extri","extri15","actop","annee","ident","noi","noicon","stat2","stc","trim",
             "ancentr","art","contra","dchant","dudet","efen","efet","naf","titc","trefen","trefet",
             "ag","cohab","cse","csei","cser","cspm","cspp","cstot","matri","naia","naim","nat14","nat28","nbactoc","nbageenfa","nbagenf","scj","sexe","so","typmen5","typmen7","typmen21","typmen15",
             "deparc","depeta","reg","dep","edep","ancchomm","cstotr","associ",
@@ -128,7 +128,7 @@ path = "C:/Users/Clement/Desktop/Projet Économétrie 2/Données"
 #path = "C:/Users/Hugues/Desktop/Cours Ensae/econo/nouvelles_donnees"
 files = list.files(path)
 
-
+sort(colnames(data))
 fichier<-lapply(files[-c(1)],function(f){
   #f<-files[length(files)]
   data = read.dta13(paste0(path,"/",f))
@@ -141,6 +141,7 @@ fichier<-lapply(files[-c(1)],function(f){
     tmp[tmp=="coured"]<-"cohab"
     tmp[tmp=="depeta"]<-"deparc" #fusion des variables département
     tmp[tmp=="nbageenfa"]<-"nbagenf"
+    tmp[tmp=="extri15"]<-"extri" #j'appelle les poids de la meme facon
     colnames(data)<-tmp
     }
   interet = data[ ,variable[variable %in% colnames(data)]]
@@ -152,9 +153,28 @@ table_finale = rbindlist(fichier, use.names = TRUE, fill = TRUE)
 #test pour voir qu'on a bien 6 interrogation a peu près par indiv + création de l'identifiant de l'indiv au passage id_ind<-iden+noi
 
 table_finale$ident_ind<-paste0(table_finale$ident,"_",table_finale$noi)
-#au niveau de l'indiv on a max 2interrogation, regardons au niveau du logement (on espère avoir 6 pour 6 trimestres..)
-tmp<-sapply(split(paste0(table_finale$annee,"_",table_finale$trim),table_finale$ident),length)
-#ARf... à demande, on devait avoir 6 fois le logement dans la base en moyenne..
+#seuls les trim 1 ont été gardés
+#tmp<-sapply(split(paste0(table_finale$annee,"_",table_finale$trim),table_finale$ident),length)
+
+#Variable au niveau départemental
+cle<-paste0(table_finale$dep,table_finale$annee) #on regarde par département/année
+#pop
+depannee_vers_pop<-sapply(split(table_finale$extri,cle),sum,na.rm =TRUE)
+table_finale$pop_dep_annee<-depannee_vers_pop[cle] #là ça me donne la pop définie par la somme des poids,
+
+#si on veut la population de chômeur, rien de plus simple (actop =2 si actif inoccupé => donc chomeur)
+table_chomeur<-table_finale[table_finale$actop=="1",]
+cle_chomeur<-paste0(table_chomeur$dep,table_chomeur$annee)
+
+depannee_vers_nb_chom<-sapply(split(table_chomeur$extri,cle_chomeur),sum,na.rm=TRUE) #je somme les poids des chomeurs=> nb chomeur par depannee
+table_finale$pop_chomeur_dep_annee<-depannee_vers_nb_chom[cle] #je mets la clé de la table complète ici, l'autre me servait juste pour le calcul
+
+#TO DO TROUVER d'autres idées de var niveau dep, pop qu travaille dans l'industrie etc ??
+
+
+#je nomme le
+
+
 
 #ok je filtre sur les variables et salarié et actif occupé 
 table_finale = table_finale[(table_finale$stat2 == "2" & table_finale$actop =="1") ,]
