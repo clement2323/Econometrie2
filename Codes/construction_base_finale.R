@@ -4,8 +4,8 @@ library(data.table)
 library(readstata13)
 
 #je source les libellés de variables
-source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
-#source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
+#source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
+source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
 #########################################
 ####Liste des des variables par thème####
 #########################################
@@ -15,8 +15,8 @@ source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
 # - actualisation en euro 2013 (du coup faut tout relancer pour salmet)
 # - taux chomage, retard 6eme (nb eleves avec 1 an retard en 6eme) et esp vie
 #   des departements (j'avais pas vu que tu avais deja mis le chomage aha)
-#departements = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/departements.csv')
-departements = fread('C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/departements.csv')
+departements = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/departements.csv')
+#departements = fread('C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/departements.csv')
 
 
 
@@ -118,14 +118,14 @@ departements = fread('C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/depart
 variable<-c("extri","extri15","actop","annee","ident","noi","noicon","stat2","stc","trim",
             "ancentr","art","contra","dchant","dudet","efen","efet","naf","titc","trefen","trefet",
             "ag","cohab","cse","csei","cser","cspm","cspp","cstot","matri","naia","naim","nat14","nat28","nbactoc","nbageenfa","nbagenf","scj","sexe","so","typmen5","typmen7","typmen21","typmen15",
-            "deparc","depeta","reg","dep","edep","ancchomm","cstotr","associ",
-            "prim","revent","salmee","salmet","salred","congj","congjr","cstotcj","cstotprmcj",
-            "emphre","emphnh","hhc","hhc6","jourtr","nbheur","nbhp","sousempl","tpp",
+            "deparc","depeta","reg","dep","edep","ancchomm","cstotr","associ","nafg021n","nafg021un","peun",
+            "prim","revent","salmee","salmet","salred","congj","congjr","cstotcj","cstotprmcj","nafg004n","nafg4","nafg4n",
+            "emphre","emphnh","hhc","hhc6","jourtr","nbheur","nbhp","sousempl","tpp","naf","naf1993","naf2003","NAFG88UN",
             "cite97","datdip","datgen","datsup","ddipl","dip","dip11","dipdet","fordat","formoi","forsg","ngen","nivet","spe")
 
 
-path = "C:/Users/Clement/Desktop/Projet Économétrie 2/Données"
-#path = "C:/Users/Hugues/Desktop/Cours Ensae/econo/nouvelles_donnees"
+#path = "C:/Users/Clement/Desktop/Projet Économétrie 2/Données"
+path = "C:/Users/Hugues/Desktop/Cours Ensae/econo/nouvelles_donnees"
 files = list.files(path)
 
 sort(colnames(data))
@@ -231,27 +231,13 @@ table_finale$deparc[table_finale$deparc==""]<-"97" #Je mets dans 97 les 4000 non
 
 #=========actualisation==========
 #actualisation en euro 2013 (jusqu'a 1.18 de diff -> vaut le coup)
-actu_eur2013<-setNames(c(1.00, 1.00, 1.01, 1.03, 1.05, 1.07, 1.07, 1.10, 1.11, 1.13, 1.15, 1.18),2014:2003)
-table_finale$actu_eur13 = actu_eur2013[as.character(table_finale$annee)]
-table_finale$salmee<-as.numeric(table_finale$salmee)
-table_finale$salmee_actu <- table_finale$salmee * table_finale$actu_eur13
-
-
+#actu_eur2013<-setNames(c(1.00, 1.00, 1.01, 1.03, 1.05, 1.07, 1.07, 1.10, 1.11, 1.13, 1.15, 1.18),2014:2003)
+#table_finale$actu_eur13 = actu_eur2013[as.character(table_finale$annee)]
+#table_finale$salmee<-as.numeric(table_finale$salmee)
+#table_finale$salmee_actu <- table_finale$salmee * table_finale$actu_eur13
 
 #deparc change en depeta
 #table_finale$deparc <- ifelse(table_finale$deparc == "", table_finale$depeta, table_finale$deparc)
-
-#ret6m : retard d'un an en sixième
-ret = setNames(as.character(departements$ret_6m), departements$num)
-table_finale$ret6m <- ret[as.character(table_finale$deparc)]
-
-#esp de vie
-esp = setNames(as.character(departements$esp_vie), departements$num)
-table_finale$esp_vie <- esp[as.character(table_finale$deparc)]
-
-#moyenne chomage sur annees 2003 2014
-chom = setNames(as.character(departements$chomage_moy), departements$num)
-table_finale$tx_chomage <- chom[as.character(table_finale$deparc)]
 
 # fin ajouts
 # ================================================
@@ -339,8 +325,8 @@ table_finale$cspm[table_finale$cspm=="7"]<-"1"
 #table_finale$taux_chom<-dep_vers_taux_chom[table_finale$deparc]
 
 #Les établissements
-etab<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/Etablissements d'enseignement superieur.csv")
-#etab<-fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/Etablissements d'enseignement superieur.csv")
+#etab<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/Etablissements d'enseignement superieur.csv")
+etab<-fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/Etablissements d'enseignement superieur.csv")
 etab$dep<-substr(etab$`Code département`,3,4)
 
 tmp<-lapply(split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc)),function(x){
@@ -392,6 +378,43 @@ table_finale$typmen7[table_finale$typmen7 %in% c(5,6,9)]<-5
 table_finale$typmen<-ifelse(table_finale$annee %in% c("2013","2014"),table_finale$typmen7,table_finale$typmen5)
 
 table(table_finale$typmen)
+
+
+# ===================================================
+# nafg4n et nafg004n sont mm chose : 
+table_finale$naf4 = ifelse(table_finale$annee <= 2008, table_finale$nafg4, ifelse(table_finale$annee<= 2012, table_finale$nafg4n, table_finale$nafg004n))
+
+#table_finale = table_finale[(table_finale$salmee < 120000) & (table_finale$salmee > 100),]
+
+cle<-paste0(table_finale$deparc,table_finale$annee)
+dfterti <- table_finale[table_finale$naf4 == "EV",]
+cle_terti<-paste0(dfterti$deparc,dfterti$annee) 
+depannee_vers_tertiaire <- sapply(split(dfterti$extri,cle_terti),sum,na.rm =TRUE)
+table_finale$dep_annee_terti = depannee_vers_tertiaire[cle]
+
+dfindus <- table_finale[table_finale$naf4 == "ET",]
+cleindus = paste0(dfindus$deparc,dfindus$annee) 
+depannee_vers_industrie <- sapply(split(dfindus$extri,cleindus),sum,na.rm =TRUE)
+table_finale$dep_annee_indu = depannee_vers_industrie[cle]
+
+dfagri<- table_finale[table_finale$naf4 == "ES",]
+cleagri = paste0(dfagri$deparc,dfagri$annee) 
+depannee_vers_agri <- sapply(split(dfagri$extri,cleagri),sum,na.rm =TRUE)
+table_finale$dep_annee_agri = depannee_vers_agri[cle]
+
+dfconstru<- table_finale[table_finale$naf4 == "ES",]
+cleconstru = paste0(dfconstru$deparc,dfconstru$annee) 
+depannee_vers_constru <- sapply(split(dfconstru$extri,cleconstru),sum,na.rm =TRUE)
+table_finale$dep_annee_constru = depannee_vers_constru[cle]
+
+tauxtot = table_finale$dep_annee_agri + table_finale$dep_annee_indu + table_finale$dep_annee_constru + table_finale$dep_annee_terti
+table_finale$tx_dep_annee_constru <- table_finale$dep_annee_constru/tauxtot * 100
+table_finale$tx_dep_annee_agri <- table_finale$dep_annee_agri/tauxtot * 100
+table_finale$tx_dep_annee_indu <- table_finale$dep_annee_indu/tauxtot * 100
+table_finale$tx_dep_annee_terti <-table_finale$dep_annee_terti/tauxtot * 100
+table_finale$tx_chomage = (table_finale$pop_chomeur_dep_annee / table_finale$pop_dep_annee) * 100
+
+
 #J'efface ce qui ne sert plus
 
 rm(list=ls()[ls()!="table_finale"])
@@ -400,11 +423,11 @@ rm(list=ls()[ls()!="table_finale"])
 
 #Save en Rdata et en csv
 
-fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
-save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")
+# fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
+# save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")
 
-# fwrite(table_finale,"C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv")
-# save.image(file="C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.Rdata")
+fwrite(table_finale,"C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv")
+save.image(file="C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.Rdata")
 
 
 rm(list=ls())

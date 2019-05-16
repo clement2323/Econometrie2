@@ -7,15 +7,15 @@ drop _all // Effacer toutes les variables
 . ssc install estout
 
 
-cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
-//cd "C:/Users/Hugues/Desktop/Cours Ensae/econo"
+//cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
+cd "C:/Users/Hugues/Desktop/Cours Ensae/econo"
 insheet using "table_finale.csv", clear // Pour ouvrir un fichier .raw ou .csv
 
 //cd "C:\Users\Clement\Desktop\Projet Économétrie 2\Données"
 //use "indiv1990-2002.dta", clear // Pour ouvrir un fichier .raw ou .csv
 
 describe //donne les variables et leur type 
-summarize //Description quantitative : (aussi) su su
+summarize salmee //Description quantitative : (aussi) su su
 tabulate salmet  //  Description qualitative : aussi 
 browse //Affichage de labase de données dans la console
 
@@ -31,14 +31,16 @@ gen log_salmee = log(salmee)
 drop log_salhor
 gen log_salhor = log(salhor)
 gen femme = (sexe == 2)
+gen poids = round(extri, 1)
 //Dans toute la suite, on fera fit du fait que les valeurs manquantes pour la variable explicative sont forcément liées aux valeurs de ces dernières
 // faire peut etre une stat pour voir que les plus diplomés sont les plus riches et aussi ceux qui repondent le moins souvent ?
 
 //Reg naive en empilant tout et ne respectant rien
 //Q 4 //utilisation de estout pour exporter les résultats au format latex directement
 eststo clear
-eststo : reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude femme // on obtient bien qcch de cohérent, et même chose dans littérature
-esttab using "C:/Users/Clement/Desktop/Projet Économétrie 2/reg1.tex", se ar2
+eststo : reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude femme [fweight = poids] // on obtient bien qcch de cohérent, et même chose dans littérature
+//esttab using "C:/Users/Clement/Desktop/Projet Économétrie 2/reg1.tex", se ar2
+esttab using "C:/Users/Hugues/Desktop/Cours Ensae/econo/reg1.tex", se ar2
 
 //une année d'étude augmente le salaire de 0.1 %
 //l'exp potentielle joue à hauteur de Bex_p +2 B_exp^2, une année d'expérience potentielle augmente le salaire de 0.048 %
@@ -98,13 +100,14 @@ tabulate ddipl // ddipl1 c'est le diplome du sup
 //Question 7
 //cser cspp ag nbagenf
 //type men ?
-gen salrep = (salmee !=. )
+//gen salrep = (salmee !=. )
 //il y a 136 000 individus qui donnent leurs salaires seulement
 egen sit_ind_c=group(sit_ind)
 tabulate sit_ind sit_ind_c
 
+
 //i.nbagenf  ne donne pas grand chose la variable typ men est plus agrégée on risque de voir plus d'effets dedans
-reg log_salmee i.sit_ind_c taux_dip_dep femme immigre i.typmen c.ag c.ag#c.ag ret6m //tx_chomage esp_vie pas significatives (sauf à 20 % pour esp_vie) 
+reg log_salmee i.sit_ind_c taux_dip_dep femme immigre i.typmen c.ag c.ag#c.ag taux_tertiaire [fweight = poids] //tx_chomage esp_vie pas significatives (sauf à 20 % pour esp_vie) taux_tertiaire
 //l'effet de l'âge sur le diplôme est positif mais diminue l'âge augmente quand ce dernier augmente normal, yes?
 //le bac est la modalité de référence ici on voit que le gradient de salaire suit celui du diplôme
 // le nbagenfant est croissant avec le nombre d'enfant, peu d'effet sur salaire et le fait d'avoir des enfants semble jouer possitivement sur le salaire..
@@ -113,7 +116,7 @@ reg log_salmee i.sit_ind_c taux_dip_dep femme immigre i.typmen c.ag c.ag#c.ag re
 //peut être faut il faire intéragir femme et type ménage pour voir un effet négatif.
 
 
-reg log_salmee i.sit_ind_c taux_dip_dep femme i.typmen i.typmen#femme immigre c.ag c.ag#c.ag i.cspp ret6m
+reg log_salmee i.sit_ind_c taux_dip_dep femme i.typmen i.typmen#femme immigre c.ag c.ag#c.ag i.cspp taux_tertiaire [fweight = poids]
 //Question je n'ai pas mis la variable cser ici (csp de l'enquêtée) car elle est directement reliée au salaire, totologique si la csp du mec bouge alors c'est qu'il avait des aptitudes lemploi occupé explique le salaire?
 //la csp non renseignée 0 est celle qui donne les effets les plus positifs sur le salaire, dur à interpréter
 // effet du taux de chomage sur le ssalaire positif ?? très bizarre (effet très faible)
@@ -160,8 +163,6 @@ insheet using "first_dif.csv", clear
 // je pense qu'on peut laisser les variables qualitatives telles qu'elles
 egen sit_ind_c=group(sit_ind)
 gen femme = (sexe == 2)
-gen dif_log_salmee = real(dif_logsalmee)
-gen dif_log_salhor = real(dif_logsalhor)
 
 browse
 
@@ -170,7 +171,7 @@ browse
 // Test d'exogénéité stricte
 // on inclut les X de l'année 2 + différences de taux diplômé département
 //annee_etude2 = année d'étude sur t+1
-reg dif_log_salmee annee_etude_tplus1 exp_po_tplus1 dif_taux_dip_dep taux_dip_dep_tplus1
+reg dif_logsalmee annee_etude_tplus1 exp_po_tplus1 dif_taux_dip_dep taux_dip_dep_tplus1
 // on trouve que taux_dip_dep_tplus1 est significatif --> on va devoir l'instrumenter
 
 
@@ -179,13 +180,14 @@ correlate dif_taux_dip_dep crea_etab // c'est très très nul comme VI
 correlate dif_taux_dip_dep crea_4_6dernieres crea_5_10dernieres crea_5dernieres crea_10dernieres // c'est déjà 10 fois mieux mais toujours pas folichon
 correlate dif_taux_dip_dep taux_dip_dep_t //semble beaucoup mieux marcher, la corrélation à 0.25 en est même suspecte
 
+correlate dif_taux_dip_dep dif_taux_tertiaire dif_tx_chom
 
 // reg dif_log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre i.cspp taux_dip_dep // bcp trop de variables pour nb observations
-reg dif_log_salmee femme immigre dif_taux_dip_dep //on garde un minimum de variables quali
-reg dif_log_salmee dif_taux_dip_dep // taux_dip_dep significatif (augmentation taux diplômés), effet de un peu moins de 1 % sur salaire , on est content
-
-ivregress 2sls dif_log_salmee (dif_taux_dip_dep = taux_dip_dep_t),first //on obtient quelque chose de propre mais on obtient le mauvais signe, c'est sensé être positif....
-ivregress 2sls dif_log_salmee (dif_taux_dip_dep = crea_4_6dernieres), first //ici on obtient qqch de positif mais significatif qu'à 10%
+//reg dif_log_salmee femme immigre dif_taux_dip_dep //on garde un minimum de variables quali
+reg dif_logsalmee dif_taux_dip_dep dif_tx_pop_tertiaire dif_pop_chom // dif_taux_tertiaire dif_tx_chom // taux_dip_dep significatif (augmentation taux diplômés), effet de un peu moins de 1 % sur salaire , on est content
+// "dif_tx_pop_tertiaire","dif_tx_pop_indus"
+ivregress 2sls dif_logsalmee (dif_taux_dip_dep = taux_dip_dep_t),first //on obtient quelque chose de propre mais on obtient le mauvais signe, c'est sensé être positif....
+ivregress 2sls dif_logsalmee (dif_taux_dip_dep = crea_4_6dernieres), first //ici on obtient qqch de positif mais significatif qu'à 10%
 
 
 

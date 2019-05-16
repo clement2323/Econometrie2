@@ -25,7 +25,7 @@ for (i in 2003:2013){
   ind = df_ind[df_ind$x == 2,]$ident_ind
   
   #on fait les diff
-  dif = df[df$annee == (i+1) & df$ident_ind %in% ind, c('logsalmee','logsalhor','taux_dip_dep') ] - df[df$annee == i & df$ident_ind %in% ind, c('logsalmee','logsalhor','taux_dip_dep') ]
+  dif = df[df$annee == (i+1) & df$ident_ind %in% ind, c('log_salmee','taux_dip_dep','taux_tertiaire','pop_chomeur_dep_annee','tx_chomage','tx_pop_tertiaire','tx_pop_indus') ] - df[df$annee == i & df$ident_ind %in% ind, c('log_salmee','taux_dip_dep','taux_tertiaire','pop_chomeur_dep_annee','tx_chomage','tx_pop_tertiaire','tx_pop_indus') ]
   dif$annee = i
   dif$crea_etab = df[df$annee == (i+1)& df$ident_ind %in% ind,]$crea_etab
   dif$sexe = df[df$annee == (i+1)& df$ident_ind %in% ind,]$sexe
@@ -39,6 +39,7 @@ for (i in 2003:2013){
   dif$taux_dip_dep_tplus1 = df[df$annee == (i+1)& df$ident_ind %in% ind,]$taux_dip_dep
   dif$deparc = df[df$annee == (i+1)& df$ident_ind %in% ind,]$deparc
   dif$annee_deparc = paste0(dif$annee,'_',dif$deparc)
+  
   if (i>=2004){
     dif$taux_dip_dep_t = df[df$annee == i& df$ident_ind %in% ind,]$taux_dip_dep
   }else{dif$taux_dip_dep_t <- as.numeric(0)}
@@ -122,9 +123,13 @@ for (date in 2003:2014){
 df_final[is.na(df_final$crea_4_6dernieres),]$crea_4_6dernieres <- 0
 summary(df_final$crea_4_6dernieres)
 
-names(df_final) [3] <- "dif_taux_dip_dep"
-names(df_final) [2] <- "dif_logsalmee"
-names(df_final) [1] <- "dif_logsalhor"
+names(df_final) [1] <- "dif_logsalmee"
+names(df_final) [2] <- "dif_taux_dip_dep"
+names(df_final) [3] <- "dif_taux_tertiaire"
+names(df_final) [4] <- "dif_pop_chom"
+names(df_final) [5] <- "dif_tx_chom"
+names(df_final) [6] <- "dif_tx_pop_tertiaire"
+names(df_final) [7] <- "dif_tx_pop_indus"
 
 names(df_final)
 
