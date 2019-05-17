@@ -4,8 +4,8 @@ library(data.table)
 library(readstata13)
 
 #je source les libellés de variables
-#source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
-source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
+source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
+#source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
 #########################################
 ####Liste des des variables par thème####
 #########################################
@@ -15,8 +15,8 @@ source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
 # - actualisation en euro 2013 (du coup faut tout relancer pour salmet)
 # - taux chomage, retard 6eme (nb eleves avec 1 an retard en 6eme) et esp vie
 #   des departements (j'avais pas vu que tu avais deja mis le chomage aha)
-departements = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/departements.csv')
-#departements = fread('C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/departements.csv')
+#departements = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/departements.csv')
+departements = fread('C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/departements.csv')
 
 
 
@@ -124,11 +124,13 @@ variable<-c("extri","extri15","actop","annee","ident","noi","noicon","stat2","st
             "cite97","datdip","datgen","datsup","ddipl","dip","dip11","dipdet","fordat","formoi","forsg","ngen","nivet","spe")
 
 
-#path = "C:/Users/Clement/Desktop/Projet Économétrie 2/Données"
-path = "C:/Users/Hugues/Desktop/Cours Ensae/econo/nouvelles_donnees"
+path = "C:/Users/Clement/Desktop/Projet Économétrie 2/Données"
+#path = "C:/Users/Hugues/Desktop/Cours Ensae/econo/nouvelles_donnees"
 files = list.files(path)
 
-sort(colnames(data))
+
+# Concaténation des bases 
+
 fichier<-lapply(files[-c(1)],function(f){
   #f<-files[length(files)]
   data = read.dta13(paste0(path,"/",f))
@@ -148,37 +150,73 @@ fichier<-lapply(files[-c(1)],function(f){
   #
   })
 
+
 table_finale = rbindlist(fichier, use.names = TRUE, fill = TRUE)
 
-#test pour voir qu'on a bien 6 interrogation a peu près par indiv + création de l'identifiant de l'indiv au passage id_ind<-iden+noi
-
+#Création de l'ident individu
 table_finale$ident_ind<-paste0(table_finale$ident,"_",table_finale$noi)
-#seuls les trim 1 ont été gardés
-#tmp<-sapply(split(paste0(table_finale$annee,"_",table_finale$trim),table_finale$ident),length)
+#library(data.table)
+# fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale_1.csv")
+ # table_finale<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale_1.csv")
+##################################################
+## Création des variables au niveau départemental#
+##################################################
+#Filtre sur les lignes avec etab renseigné
 
-#Variable au niveau départemental
-cle<-paste0(table_finale$dep,table_finale$annee) #on regarde par département/année
-#pop
+cle<-paste0(table_finale$dep,table_finale$annee) #on regarde par département/année #ici pour chomage onutilise dep
 depannee_vers_pop<-sapply(split(table_finale$extri,cle),sum,na.rm =TRUE)
 table_finale$pop_dep_annee<-depannee_vers_pop[cle] #là ça me donne la pop définie par la somme des poids,
 
 #si on veut la population de chômeur, rien de plus simple (actop =2 si actif inoccupé => donc chomeur)
-table_chomeur<-table_finale[table_finale$actop=="1",]
-cle_chomeur<-paste0(table_chomeur$dep,table_chomeur$annee)
+#je filtre sur les tables finales où le deparc est renseigné (peu de perte parmi les salarié)
 
+table_chomeur<-table_finale[table_finale$actop=="2",]
+cle_chomeur<-paste0(table_chomeur$dep,table_chomeur$annee)
 depannee_vers_nb_chom<-sapply(split(table_chomeur$extri,cle_chomeur),sum,na.rm=TRUE) #je somme les poids des chomeurs=> nb chomeur par depannee
 table_finale$pop_chomeur_dep_annee<-depannee_vers_nb_chom[cle] #je mets la clé de la table complète ici, l'autre me servait juste pour le calcul
 
-#TO DO TROUVER d'autres idées de var niveau dep, pop qu travaille dans l'industrie etc ??
+
+#On aggrege toutes les variables naf 4 sous le même nom naf 4
+table_finale$naf4 = ifelse(table_finale$annee <= 2008, table_finale$nafg4, ifelse(table_finale$annee<= 2012, table_finale$nafg4n, table_finale$nafg004n))
+
+table_finale<-table_finale[table_finale$deparc!="",] #j'enlève les deparc vite
+
+#table_finale = table_finale[(table_finale$salmee < 120000) & (table_finale$salmee > 100),]
+cle<-paste0(table_finale$deparc,table_finale$annee) #on regarde par département de l'établissement ici
 
 
-#je nomme le
+dfterti <- table_finale[table_finale$naf4 == "EV",]
+cle_terti<-paste0(dfterti$deparc,dfterti$annee) 
+depannee_vers_tertiaire <- sapply(split(dfterti$extri,cle_terti),sum,na.rm =TRUE)
+table_finale$dep_annee_terti = depannee_vers_tertiaire[cle]
+
+dfindus <- table_finale[table_finale$naf4 == "ET",]
+cle_indus = paste0(dfindus$deparc,dfindus$annee) 
+depannee_vers_industrie <- sapply(split(dfindus$extri,cle_indus),sum,na.rm =TRUE)
+table_finale$dep_annee_indu = depannee_vers_industrie[cle]
+
+dfagri<- table_finale[table_finale$naf4 == "ES",]
+cle_agri = paste0(dfagri$deparc,dfagri$annee) 
+depannee_vers_agri <- sapply(split(dfagri$extri,cle_agri),sum,na.rm =TRUE)
+table_finale$dep_annee_agri = depannee_vers_agri[cle]
+
+dfconstru<- table_finale[table_finale$naf4 == "ES",]
+cle_constru = paste0(dfconstru$deparc,dfconstru$annee) 
+depannee_vers_constru <- sapply(split(dfconstru$extri,cle_constru),sum,na.rm =TRUE)
+table_finale$dep_annee_constru = depannee_vers_constru[cle]
+
+tauxtot = table_finale$dep_annee_agri + table_finale$dep_annee_indu + table_finale$dep_annee_constru + table_finale$dep_annee_terti
+table_finale$tx_dep_annee_constru <- table_finale$dep_annee_constru/tauxtot * 100
+table_finale$tx_dep_annee_agri <- table_finale$dep_annee_agri/tauxtot * 100
+table_finale$tx_dep_annee_indu <- table_finale$dep_annee_indu/tauxtot * 100
+table_finale$tx_dep_annee_terti <-table_finale$dep_annee_terti/tauxtot * 100
+table_finale$tx_chomage = (table_finale$pop_chomeur_dep_annee / table_finale$pop_dep_annee) * 100
 
 
 
-#ok je filtre sur les variables et salarié et actif occupé 
+#Maintenant que j'ai récupéré mon taux de chômage je filtre sur les variables et salarié et actif occupé 
 table_finale = table_finale[(table_finale$stat2 == "2" & table_finale$actop =="1") ,]
-table_finale$ident_temps<-paste0(table_finale$annee,"_",table_finale$trim)
+
 
 #Passage des dates et age en numérique
 
@@ -190,12 +228,8 @@ table_finale$ag<-as.integer(table_finale$ag)
 table_finale$naia<-as.integer(table_finale$naia)
 
 # ===
-table_finale$congj = ifelse(is.na(table_finale$congj), table_finale$congjr, table_finale$congj)
-table_finale$cstotcj = ifelse(is.na(table_finale$cstotcj), table_finale$cstotprmcj, table_finale$cstotcj)
-# ===
 
 
-#nombre années études j'abandonne l'idée d'utiliser datsup dat gen datdip
 #expérience potentielle = expérience pro qu'aurait eu quelqu'un si il avait travailler toute sa vie en dehors de ses années d'études et de sa prime enfance
 #= âge -annéesétudes (de 6ans à...) -6  # pour annee etude on fait ça à l'arrache car  datgen et datsup donnet des valeurs aberrantes
 
@@ -236,16 +270,11 @@ table_finale$deparc[table_finale$deparc==""]<-"97" #Je mets dans 97 les 4000 non
 #table_finale$salmee<-as.numeric(table_finale$salmee)
 #table_finale$salmee_actu <- table_finale$salmee * table_finale$actu_eur13
 
-#deparc change en depeta
-#table_finale$deparc <- ifelse(table_finale$deparc == "", table_finale$depeta, table_finale$deparc)
 
-# fin ajouts
 # ================================================
 
 
-##recodage de salmet, je le renseigne pour les lignes qui ont répondu au salaire mais dont la tranche n'est de fait pas renseignée
-#table(table_finale$salmet)
-#sum(table_finale$salmet=="");sum(is.na(table_finale$salmee))
+#recodage de salmet, je le renseigne pour les lignes qui ont répondu au salaire mais dont la tranche n'est de fait pas renseignée
 table_finale$salmee<-as.numeric(table_finale$salmee)
 table_finale$salmet<-ifelse(is.na(table_finale$salmee),table_finale$salmet,
                             ifelse(table_finale$salmee<500,"A",
@@ -259,28 +288,25 @@ table_finale$salmet<-ifelse(is.na(table_finale$salmee),table_finale$salmet,
                                                                                     ifelse(table_finale$salmee<8000,"I",
                                                                                            "J"))))))))))
 
-table_finale$salmet_actu<-ifelse(is.na(table_finale$salmee_actu),table_finale$salmet,
-                            ifelse(table_finale$salmee_actu<500,"A",
-                                   ifelse(table_finale$salmee_actu<1000,"B",
-                                          ifelse(table_finale$salmee_actu<1250,"C",
-                                                 ifelse(table_finale$salmee_actu<1500,"D",
-                                                        ifelse(table_finale$salmee_actu<2000,"E",
-                                                               ifelse(table_finale$salmee_actu<2500,"F",
-                                                                      ifelse(table_finale$salmee_actu<3000,"G",
-                                                                             ifelse(table_finale$salmee_actu<5000,"H",
-                                                                                    ifelse(table_finale$salmee_actu<8000,"I",
-                                                                                           "J"))))))))))
+#Si on veut le salaire actualisé
+# table_finale$salmet_actu<-ifelse(is.na(table_finale$salmee_actu),table_finale$salmet,
+#                             ifelse(table_finale$salmee_actu<500,"A",
+#                                    ifelse(table_finale$salmee_actu<1000,"B",
+#                                           ifelse(table_finale$salmee_actu<1250,"C",
+#                                                  ifelse(table_finale$salmee_actu<1500,"D",
+#                                                         ifelse(table_finale$salmee_actu<2000,"E",
+#                                                                ifelse(table_finale$salmee_actu<2500,"F",
+#                                                                       ifelse(table_finale$salmee_actu<3000,"G",
+#                                                                              ifelse(table_finale$salmee_actu<5000,"H",
+#                                                                                     ifelse(table_finale$salmee_actu<8000,"I",
+#                                                                                            "J"))))))))))
 
 
 #filtre 15 - 65 ans
 table_finale<-table_finale[table_finale$ag<=65 & table_finale$ag>=15,]
-#Il restait quelques aberrations
-
-# library(data.table)
-# table_finale<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
 
 #diplôme en 4 catégories sans diplome, bac, licence, master et plus
-#jemets en sans diplome tout ce qui est inférieur à bac
+#je mets en sans diplome tout ce qui est inférieur à bac
 dip_nomme<-setNames(c("master et plus","master et plus",
                  "licence maîtrise","licence maîtrise",
                  "Bac+2","Bac+2","Bac+2","Bac+2",
@@ -289,6 +315,7 @@ dip_nomme<-setNames(c("master et plus","master et plus",
                ,c(10,12,21,22,30,31,32,33,41,42,43,44,50,60,70,71))
                
 #J'appelle les variables comme dans le modele de la question 7
+#diplome de l'individu
 table_finale$sit_ind<-dip_nomme[table_finale$dip]
 
 
@@ -298,66 +325,58 @@ table_finale$immigre<-ifelse((table_finale$annee %in% c("2013","2014") & table_f
 
 
 #cser pour la csp de l'individu  
-#cspp / m pour la csp du père et de la mère, je la laisse en une position
+#cspp / m pour la csp du père et de la mère, je la met sur 1 position
 table_finale$cspp<-substr(table_finale$cspp,1,1)
 table_finale$cspm<-substr(table_finale$cspm,1,1)
 
+#les anciens agri avec les agri
 table_finale$cspp[table_finale$cspp=="7"]<-"1"
 table_finale$cspm[table_finale$cspm=="7"]<-"1"
-#les anciens agri avec les agri
-
-# reproduction sociale
-# round(prop.table(table(table_finale$cspp,table_finale$sit_ind),1)*100,0)
 
 
+####Création de variables instrumentale pour le taux de diplômés dans le département
 
-#chomage par département, provient des données insee du RP2015 
-
-#chomage_dep<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/chomage_dep.csv")
-#chomage_dep$dep<-substr(chomage_dep$dep,1,2)
- 
-#dep_vers_taux_chom<-sapply(split(chomage_dep[,c("homme_chomeur","femme_chomeur","homme_emploi","femme_emploi")],chomage_dep$dep),function(x){
-# x<-split(chomage_dep[,c("homme_chomeur","femme_chomeur","homme_emploi","femme_emploi")],chomage_dep$dep)$'97'
-#   x<-colSums(x)
-#  unname(((x[1]+x[2])/(sum(x)))*100)
-#  })
-#chomage_dep$taux_chom<-(chomage_dep$homme_chomeur+chomage_dep$femme_chomeur)/(chomage_dep$homme_chomeur+chomage_dep$femme_chomeur+chomage_dep$homme_emploi+chomage_dep$femme_emploi)*100
-#table_finale$taux_chom<-dep_vers_taux_chom[table_finale$deparc]
-
-#Les établissements
-#etab<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/Etablissements d'enseignement superieur.csv")
-etab<-fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/Etablissements d'enseignement superieur.csv")
+etab<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/Etablissements d'enseignement superieur.csv")
+#etab<-fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/Etablissements d'enseignement superieur.csv")
 etab$dep<-substr(etab$`Code département`,3,4)
 
-tmp<-lapply(split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc)),function(x){
-  #x<-split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc))[[1]]
-  etab_concerne<-etab[etab$Date<=unique(x$annee) & etab$dep == unique(x$deparc)]
-  #je vais sommer l'ensemble des écoles dispo
-  t(colSums(etab_concerne[,c("Institut_Universitaire_de_Technologie","Institut_Universitaire_Professionnalisé","Université","Composante_universitaire","Ecole_ingénieurs" )],na.rm = TRUE))
-})
-tmp2<-do.call(rbind,tmp)
-row.names(tmp2)<-names(tmp)
-
-table_finale<-cbind(table_finale,tmp2[paste0(table_finale$annee,"_",table_finale$deparc),])
-#pour chaque département x année j'ai donc le nombre d'écoles de chaque type qui était ouvertes
+# tmp<-lapply(split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc)),function(x){
+#   #x<-split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc))[[1]]
+#   etab_concerne<-etab[etab$Date<=unique(x$annee) & etab$dep == unique(x$deparc)]
+#   t(colSums(etab_concerne[,c("Institut_Universitaire_de_Technologie","Institut_Universitaire_Professionnalisé","Université","Composante_universitaire","Ecole_ingénieurs" )],na.rm = TRUE))
+# })
+# tmp2<-do.call(rbind,tmp)
+# row.names(tmp2)<-names(tmp)
+# 
+# table_finale<-cbind(table_finale,tmp2[paste0(table_finale$annee,"_",table_finale$deparc),])
+# #pour chaque département x année j'ai donc le nombre d'écoles de chaque type qui était ouvertes
 
 
 # =========================
 #j'ajoute la creation d'etablissement sup (somme sur tous types)
-etab_recent = etab[etab$Date >= 2003,]
-crea_etab = aggregate(etab_recent$dep, by = etab_recent[, c('Date','dep')], length)
-crea_etab$annee_deparc = paste0(crea_etab$Date,"_",crea_etab$dep)
-crea_etab = setNames(crea_etab$x, crea_etab$annee_deparc)
+#Pour chaque depXannee on veut le nombre d'établisssement crées dans le dep entre 4 et 6 ans avant
 
-table_finale$annee_deparc = paste0(table_finale$annee,"_",table_finale$deparc)
-table_finale$crea_etab <- crea_etab[table_finale$annee_deparc]
-table_finale[is.na(table_finale$crea_etab),]$crea_etab <- 0
+table_finale$annee_deparc<-paste0(table_finale$annee,"_",table_finale$dep)
+table_finale$crea_4_6dernieres <- 0 # on met la valeure à 0 si 0 création d'étab 6 ans auparavant.
+tmp<-lapply((2003:2014) ,function(date){
+  #date=2003
+  u = etab[etab$Date %in% (date-6):(date-4),]
+  a = aggregate(u$Date, by = u[,c('dep')], length)
+  a$annee_deparc = paste0(date,"_",a$dep)
+  etab4_6 = setNames(a$x, a$annee_deparc)
+  # class(etab4_6[cle])
+  
+})
+
+dep_annee_vers_crea<-do.call(c,m) 
+filtre<-table_finale$annee_deparc %in% names(dep_annee_vers_crea)
+table_finale[filtre,]$crea_4_6dernieres<-dep_annee_vers_crea[table_finale[filtre,]$annee_deparc]
 
 
 # salaire horaire et log salaire
 # problème, beaucoup de NA dans nbheur (46000 / 140000 sur ce qu'on garde - là où pas de NA
 # dans salmee/salmet etc) donc peut fiable
-table_finale[table_finale$nbheur < 40]$nbheur <- 40
+table_finale[table_finale$nbheur < 40]$nbheur <- 40 
 table_finale$nbheur = ifelse(table_finale$nbheur > 250 | is.na(table_finale$nbheur), 150, table_finale$nbheur)
 table_finale$salhor = table_finale$salmee / table_finale$nbheur
 
@@ -377,57 +396,17 @@ table_finale$taux_dip_dep<-sapply(split(table_finale$sit_ind,paste0(table_finale
 table_finale$typmen7[table_finale$typmen7 %in% c(5,6,9)]<-5
 table_finale$typmen<-ifelse(table_finale$annee %in% c("2013","2014"),table_finale$typmen7,table_finale$typmen5)
 
-table(table_finale$typmen)
-
-
-# ===================================================
-# nafg4n et nafg004n sont mm chose : 
-table_finale$naf4 = ifelse(table_finale$annee <= 2008, table_finale$nafg4, ifelse(table_finale$annee<= 2012, table_finale$nafg4n, table_finale$nafg004n))
-
-#table_finale = table_finale[(table_finale$salmee < 120000) & (table_finale$salmee > 100),]
-
-cle<-paste0(table_finale$deparc,table_finale$annee)
-dfterti <- table_finale[table_finale$naf4 == "EV",]
-cle_terti<-paste0(dfterti$deparc,dfterti$annee) 
-depannee_vers_tertiaire <- sapply(split(dfterti$extri,cle_terti),sum,na.rm =TRUE)
-table_finale$dep_annee_terti = depannee_vers_tertiaire[cle]
-
-dfindus <- table_finale[table_finale$naf4 == "ET",]
-cleindus = paste0(dfindus$deparc,dfindus$annee) 
-depannee_vers_industrie <- sapply(split(dfindus$extri,cleindus),sum,na.rm =TRUE)
-table_finale$dep_annee_indu = depannee_vers_industrie[cle]
-
-dfagri<- table_finale[table_finale$naf4 == "ES",]
-cleagri = paste0(dfagri$deparc,dfagri$annee) 
-depannee_vers_agri <- sapply(split(dfagri$extri,cleagri),sum,na.rm =TRUE)
-table_finale$dep_annee_agri = depannee_vers_agri[cle]
-
-dfconstru<- table_finale[table_finale$naf4 == "ES",]
-cleconstru = paste0(dfconstru$deparc,dfconstru$annee) 
-depannee_vers_constru <- sapply(split(dfconstru$extri,cleconstru),sum,na.rm =TRUE)
-table_finale$dep_annee_constru = depannee_vers_constru[cle]
-
-tauxtot = table_finale$dep_annee_agri + table_finale$dep_annee_indu + table_finale$dep_annee_constru + table_finale$dep_annee_terti
-table_finale$tx_dep_annee_constru <- table_finale$dep_annee_constru/tauxtot * 100
-table_finale$tx_dep_annee_agri <- table_finale$dep_annee_agri/tauxtot * 100
-table_finale$tx_dep_annee_indu <- table_finale$dep_annee_indu/tauxtot * 100
-table_finale$tx_dep_annee_terti <-table_finale$dep_annee_terti/tauxtot * 100
-table_finale$tx_chomage = (table_finale$pop_chomeur_dep_annee / table_finale$pop_dep_annee) * 100
 
 
 #J'efface ce qui ne sert plus
 
 rm(list=ls()[ls()!="table_finale"])
 
-#Rq à ce stade je n'ai pas filtré sur les valeurs manquantes de salaire
 
-#Save en Rdata et en csv
-
-# fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
-# save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")
-
-fwrite(table_finale,"C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv")
-save.image(file="C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.Rdata")
+ fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
+ save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")
+#fwrite(table_finale,"C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv")
+#save.image(file="C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.Rdata")
 
 
 rm(list=ls())
