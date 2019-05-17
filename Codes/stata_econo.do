@@ -7,8 +7,8 @@ drop _all // Effacer toutes les variables
 . ssc install estout
 
 
-//cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
-cd "C:/Users/Hugues/Desktop/Cours Ensae/econo"
+cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
+//cd "C:/Users/Hugues/Desktop/Cours Ensae/econo"
 insheet using "table_finale.csv", clear // Pour ouvrir un fichier .raw ou .csv
 
 //cd "C:\Users\Clement\Desktop\Projet Économétrie 2\Données"
@@ -40,7 +40,7 @@ gen poids = round(extri, 1)
 eststo clear
 eststo : reg log_salmee c.exp_po c.exp_po#c.exp_po c.annee_etude femme [fweight = poids] // on obtient bien qcch de cohérent, et même chose dans littérature
 //esttab using "C:/Users/Clement/Desktop/Projet Économétrie 2/reg1.tex", se ar2
-esttab using "C:/Users/Hugues/Desktop/Cours Ensae/econo/reg1.tex", se ar2
+//esttab using "C:/Users/Hugues/Desktop/Cours Ensae/econo/reg1.tex", se ar2	
 
 //une année d'étude augmente le salaire de 0.1 %
 //l'exp potentielle joue à hauteur de Bex_p +2 B_exp^2, une année d'expérience potentielle augmente le salaire de 0.048 %
@@ -107,7 +107,7 @@ tabulate sit_ind sit_ind_c
 
 
 //i.nbagenf  ne donne pas grand chose la variable typ men est plus agrégée on risque de voir plus d'effets dedans
-reg log_salmee i.sit_ind_c taux_dip_dep femme immigre i.typmen c.ag c.ag#c.ag taux_tertiaire [fweight = poids] //tx_chomage esp_vie pas significatives (sauf à 20 % pour esp_vie) taux_tertiaire
+reg log_salmee i.sit_ind_c taux_dip_dep femme immigre i.typmen c.ag c.ag#c.ag tx_dep_annee_terti tx_dep_annee_indu [fweight = poids] //tx_chomage esp_vie pas significatives (sauf à 20 % pour esp_vie) taux_tertiaire
 //l'effet de l'âge sur le diplôme est positif mais diminue l'âge augmente quand ce dernier augmente normal, yes?
 //le bac est la modalité de référence ici on voit que le gradient de salaire suit celui du diplôme
 // le nbagenfant est croissant avec le nombre d'enfant, peu d'effet sur salaire et le fait d'avoir des enfants semble jouer possitivement sur le salaire..
@@ -116,7 +116,7 @@ reg log_salmee i.sit_ind_c taux_dip_dep femme immigre i.typmen c.ag c.ag#c.ag ta
 //peut être faut il faire intéragir femme et type ménage pour voir un effet négatif.
 
 
-reg log_salmee i.sit_ind_c taux_dip_dep femme i.typmen i.typmen#femme immigre c.ag c.ag#c.ag i.cspp taux_tertiaire [fweight = poids]
+reg log_salmee i.sit_ind_c taux_dip_dep femme i.typmen i.typmen#femme immigre c.ag c.ag#c.ag i.cspp tx_dep_annee_terti tx_dep_annee_indu [fweight = poids]
 //Question je n'ai pas mis la variable cser ici (csp de l'enquêtée) car elle est directement reliée au salaire, totologique si la csp du mec bouge alors c'est qu'il avait des aptitudes lemploi occupé explique le salaire?
 //la csp non renseignée 0 est celle qui donne les effets les plus positifs sur le salaire, dur à interpréter
 // effet du taux de chomage sur le ssalaire positif ?? très bizarre (effet très faible)
@@ -132,15 +132,18 @@ reg log_salmee i.sit_ind_c taux_dip_dep femme i.typmen i.typmen#femme immigre c.
 // tests condition de rang :
 
 // pour diplome global
-gen etab_sum = institut_universitaire_de_techno + institut_universitaire_professio + universit + composante_universitaire
-correlate taux_dip_dep ret6m tx_chomage esp_vie 
-correlate taux_dip_dep etab_sum institut_universitaire_de_techno institut_universitaire_professio universit composante_universitaire
+//gen etab_sum = institut_universitaire_de_techno + institut_universitaire_professio + universit + composante_universitaire
+//correlate taux_dip_dep ret6m tx_chomage esp_vie 
+//correlate taux_dip_dep etab_sum institut_universitaire_de_techno institut_universitaire_professio universit composante_universitaire
 // esp_vie semble le meilleur instrument pour taux_dip_dep (correlation à 0.52), vient ensuite composante_universitaire puis etab_sum (corr de 0.45)
 // on va pouvoir tester notre modèle, et en plus très bien parce que ces variables sont pas dans notre modèle.
 
 // On fait des 2MC tout d'abord
-ivregress 2sls log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre c.ag c.ag#c.ag i.cspp ret6m (taux_dip_dep = esp_vie), first
-ivregress 2sls log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre c.ag c.ag#c.ag i.cspp ret6m (taux_dip_dep = etab_sum), first
+//ivregress 2sls log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre c.ag c.ag#c.ag i.cspp ret6m (taux_dip_dep = esp_vie), first
+
+
+ivregress 2sls log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre c.ag c.ag#c.ag i.cspp ret6m (taux_dip_dep = crea_4_6dernieres), first
+//ivregress 2sls log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre c.ag c.ag#c.ag i.cspp ret6m (taux_dip_dep = etab_sum), first // etab sum n'est plus d'actualité
 // On obtient sensiblement même chose que tout à l'heure en plus faible mais intervalle confiance plus étendu.
 
 
@@ -153,12 +156,9 @@ correlate annee_etude naim cspp cspm
 
 //
 //Pour les first dif :
-clear all
-drop _all
 
 //cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
-cd "C:/Users/Hugues/Desktop/Cours Ensae/econo"
-insheet using "first_dif.csv", clear 
+//cd "C:/Users/Hugues/Desktop/Cours Ensae/econo"
 // logsalhor salaire horaire (on a pas tout le temps le salaire horaire exact mais on s'en approche ici qd même)
 // je pense qu'on peut laisser les variables qualitatives telles qu'elles
 egen sit_ind_c=group(sit_ind)
@@ -166,25 +166,42 @@ gen femme = (sexe == 2)
 
 browse
 
+
+//Partie diff!!!
+egen ident_ind_2 =group(ident_ind)
+// là je dis que ident_ind c'est i et que annee c'est t
+xtset ident_ind_2 annee 
+
+//création des diffs premières pour les variables qui bougent
+foreach x of varlist log_salmee tx_dep_annee_constru tx_dep_annee_indu tx_dep_annee_terti tx_chomage taux_dip_dep{
+gen d_`x'=d.`x'
+}
+
+
+
+
 // Question 5
 
 // Test d'exogénéité stricte
 // on inclut les X de l'année 2 + différences de taux diplômé département
 //annee_etude2 = année d'étude sur t+1
+
+
 reg dif_logsalmee annee_etude_tplus1 exp_po_tplus1 dif_taux_dip_dep taux_dip_dep_tplus1
 // on trouve que taux_dip_dep_tplus1 est significatif --> on va devoir l'instrumenter
 
 
 // Question 9
-correlate dif_taux_dip_dep crea_etab // c'est très très nul comme VI
-correlate dif_taux_dip_dep crea_4_6dernieres crea_5_10dernieres crea_5dernieres crea_10dernieres // c'est déjà 10 fois mieux mais toujours pas folichon
+// i = ident t= annee
+
+correlate dif_taux_dip_dep crea_4_6dernieres 
 correlate dif_taux_dip_dep taux_dip_dep_t //semble beaucoup mieux marcher, la corrélation à 0.25 en est même suspecte
 
 correlate dif_taux_dip_dep dif_taux_tertiaire dif_tx_chom
 
 // reg dif_log_salmee i.sit_ind_c femme i.typmen femme#i.typmen immigre i.cspp taux_dip_dep // bcp trop de variables pour nb observations
 //reg dif_log_salmee femme immigre dif_taux_dip_dep //on garde un minimum de variables quali
-reg dif_logsalmee dif_taux_dip_dep dif_tx_pop_tertiaire dif_pop_chom // dif_taux_tertiaire dif_tx_chom // taux_dip_dep significatif (augmentation taux diplômés), effet de un peu moins de 1 % sur salaire , on est content
+reg dif_logsalmee d.taux_dip_dep d.pop_tertiaire d.pop_chom // dif_taux_tertiaire dif_tx_chom // taux_dip_dep significatif (augmentation taux diplômés), effet de un peu moins de 1 % sur salaire , on est content
 // "dif_tx_pop_tertiaire","dif_tx_pop_indus"
 ivregress 2sls dif_logsalmee (dif_taux_dip_dep = taux_dip_dep_t),first //on obtient quelque chose de propre mais on obtient le mauvais signe, c'est sensé être positif....
 ivregress 2sls dif_logsalmee (dif_taux_dip_dep = crea_4_6dernieres), first //ici on obtient qqch de positif mais significatif qu'à 10%
@@ -193,13 +210,6 @@ ivregress 2sls dif_logsalmee (dif_taux_dip_dep = crea_4_6dernieres), first //ici
 
 
 // Question 10
-// on revient avec table précédente
-clear all
-drop _all
-
-//cd "C:\Users\Clement\Desktop\Projet Économétrie 2"
-cd "C:/Users/Hugues/Desktop/Cours Ensae/econo"
-insheet using "table_finale.csv", clear
 
 gen etab_sum = institut_universitaire_de_techno + institut_universitaire_professio + universit + composante_universitaire
 egen sit_ind_c=group(sit_ind)

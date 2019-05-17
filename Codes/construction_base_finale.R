@@ -340,16 +340,16 @@ etab<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/Etablissements d'ense
 #etab<-fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/Etablissements d'enseignement superieur.csv")
 etab$dep<-substr(etab$`Code département`,3,4)
 
-# tmp<-lapply(split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc)),function(x){
-#   #x<-split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc))[[1]]
-#   etab_concerne<-etab[etab$Date<=unique(x$annee) & etab$dep == unique(x$deparc)]
-#   t(colSums(etab_concerne[,c("Institut_Universitaire_de_Technologie","Institut_Universitaire_Professionnalisé","Université","Composante_universitaire","Ecole_ingénieurs" )],na.rm = TRUE))
-# })
-# tmp2<-do.call(rbind,tmp)
-# row.names(tmp2)<-names(tmp)
-# 
-# table_finale<-cbind(table_finale,tmp2[paste0(table_finale$annee,"_",table_finale$deparc),])
-# #pour chaque département x année j'ai donc le nombre d'écoles de chaque type qui était ouvertes
+tmp<-lapply(split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc)),function(x){
+  #x<-split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc))[[1]]
+  etab_concerne<-etab[etab$Date<=unique(x$annee) & etab$dep == unique(x$deparc)]
+  t(colSums(etab_concerne[,c("Institut_Universitaire_de_Technologie","Institut_Universitaire_Professionnalisé","Université","Composante_universitaire","Ecole_ingénieurs" )],na.rm = TRUE))
+})
+tmp2<-do.call(rbind,tmp)
+row.names(tmp2)<-names(tmp)
+
+table_finale<-cbind(table_finale,tmp2[paste0(table_finale$annee,"_",table_finale$deparc),])
+#pour chaque département x année j'ai donc le nombre d'écoles de chaque type qui était ouvertes
 
 
 # =========================
@@ -397,11 +397,17 @@ table_finale$typmen7[table_finale$typmen7 %in% c(5,6,9)]<-5
 table_finale$typmen<-ifelse(table_finale$annee %in% c("2013","2014"),table_finale$typmen7,table_finale$typmen5)
 
 
-
+###je prends la table pour df:
+# table_finale<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
+  # tmp<-sapply(split(table_finale$ident_ind,table_finale$ident_ind),length)
+  # ident_diff<-names(tmp[tmp>=2])
+  # table_diff<-table_finale[table_finale$ident_ind %in% ident_diff,]
+    
 #J'efface ce qui ne sert plus
 
 rm(list=ls()[ls()!="table_finale"])
 
+# fwrite(table_diff,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_diff.csv")
 
  fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
  save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")

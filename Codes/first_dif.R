@@ -2,8 +2,8 @@ rm(list=ls())
 gc()
 library(data.table)
 library(readstata13)
-
-df = fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv")
+df=fread("C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
+# df = fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv")
 df = df[!is.na(df$ddipl) & !is.na(df$salmee) & !(df$salmee %in% c(9999998,9999999))]
 
 
@@ -18,6 +18,7 @@ df = df[!is.na(df$ddipl) & !is.na(df$salmee) & !(df$salmee %in% c(9999998,999999
 df_final = list()
 
 for (i in 2003:2013){
+  #i=2003
   dfbis = df[df$annee >=i & df$annee <= (i+1),]
   
   # on recupere les individus presents 2 années de suite
@@ -54,74 +55,74 @@ df_final$taux_dip_dep_tmoins1
 # on a également besoin du nombre d'établissement créés les 5 dernières années,
 # les 10 dernières années, il y a entre 5 et 10 ans, il y a 5 ans.
 # Ce sont des instruments potentiels de la variation du taux de diplômés du supérieur.
-
-etab<-fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/Etablissements d'enseignement superieur.csv")
-etab$dep<-substr(etab$`Code département`,3,4)
-
-#création établissement 10 années précédentes : 
-df_final$crea_10dernieres <- -1
-class(df_final$crea_10dernieres)
-for (date in 2003:2014){
-  u = etab[etab$Date %in% (date-10):date,]
-  a = aggregate(u$Date, by = u[,c('dep')], length)
-  a$annee = date
-  a$annee_deparc = paste0(a$annee,"_",a$dep)
-  etab10 = setNames(a$x, a$annee_deparc)
-  class(etab10[df_final$annee_deparc])
-  df_final[df_final$annee == date,]$crea_10dernieres = as.numeric(etab10[df_final[df_final$annee == date,]$annee_deparc])
-}
-
-df_final[is.na(df_final$crea_10dernieres),]$crea_10dernieres <- 0
-summary(df_final$crea_10dernieres)
-
-   
-# les 5 dernières années
-df_final$crea_5dernieres <- -1
-class(df_final$crea_5dernieres)
-for (date in 2003:2014){
-  u = etab[etab$Date %in% (date-5):date,]
-  a = aggregate(u$Date, by = u[,c('dep')], length)
-  a$annee = date
-  a$annee_deparc = paste0(a$annee,"_",a$dep)
-  etab10 = setNames(a$x, a$annee_deparc)
-  class(etab10[df_final$annee_deparc])
-  df_final[df_final$annee == date,]$crea_5dernieres = as.numeric(etab10[df_final[df_final$annee == date,]$annee_deparc])
-}
-
-df_final[is.na(df_final$crea_5dernieres),]$crea_5dernieres <- 0
-summary(df_final$crea_5dernieres)
-
-# entre 10 et 5 ans avant
-df_final$crea_5_10dernieres <- -1
-class(df_final$crea_5_10dernieres)
-for (date in 2003:2014){
-  u = etab[etab$Date %in% (date-10):(date-5),]
-  a = aggregate(u$Date, by = u[,c('dep')], length)
-  a$annee = date
-  a$annee_deparc = paste0(a$annee,"_",a$dep)
-  etab10 = setNames(a$x, a$annee_deparc)
-  class(etab10[df_final$annee_deparc])
-  df_final[df_final$annee == date,]$crea_5_10dernieres = as.numeric(etab10[df_final[df_final$annee == date,]$annee_deparc])
-}
-
-df_final[is.na(df_final$crea_5_10dernieres),]$crea_5_10dernieres <- 0
-summary(df_final$crea_5_10dernieres)
-
-#entre 4 et 6 ans avant
-df_final$crea_4_6dernieres <- -1
-class(df_final$crea_4_6dernieres)
-for (date in 2003:2014){
-  u = etab[etab$Date %in% (date-6):(date-4),]
-  a = aggregate(u$Date, by = u[,c('dep')], length)
-  a$annee = date
-  a$annee_deparc = paste0(a$annee,"_",a$dep)
-  etab10 = setNames(a$x, a$annee_deparc)
-  class(etab10[df_final$annee_deparc])
-  df_final[df_final$annee == date,]$crea_4_6dernieres = as.numeric(etab10[df_final[df_final$annee == date,]$annee_deparc])
-}
-
-df_final[is.na(df_final$crea_4_6dernieres),]$crea_4_6dernieres <- 0
-summary(df_final$crea_4_6dernieres)
+# 
+# etab<-fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/Etablissements d'enseignement superieur.csv")
+# etab$dep<-substr(etab$`Code département`,3,4)
+# 
+# #création établissement 10 années précédentes : 
+# df_final$crea_10dernieres <- -1
+# class(df_final$crea_10dernieres)
+# for (date in 2003:2014){
+#   u = etab[etab$Date %in% (date-10):date,]
+#   a = aggregate(u$Date, by = u[,c('dep')], length)
+#   a$annee = date
+#   a$annee_deparc = paste0(a$annee,"_",a$dep)
+#   etab10 = setNames(a$x, a$annee_deparc)
+#   class(etab10[df_final$annee_deparc])
+#   df_final[df_final$annee == date,]$crea_10dernieres = as.numeric(etab10[df_final[df_final$annee == date,]$annee_deparc])
+# }
+# 
+# df_final[is.na(df_final$crea_10dernieres),]$crea_10dernieres <- 0
+# summary(df_final$crea_10dernieres)
+# 
+#    
+# # les 5 dernières années
+# df_final$crea_5dernieres <- -1
+# class(df_final$crea_5dernieres)
+# for (date in 2003:2014){
+#   u = etab[etab$Date %in% (date-5):date,]
+#   a = aggregate(u$Date, by = u[,c('dep')], length)
+#   a$annee = date
+#   a$annee_deparc = paste0(a$annee,"_",a$dep)
+#   etab10 = setNames(a$x, a$annee_deparc)
+#   class(etab10[df_final$annee_deparc])
+#   df_final[df_final$annee == date,]$crea_5dernieres = as.numeric(etab10[df_final[df_final$annee == date,]$annee_deparc])
+# }
+# 
+# df_final[is.na(df_final$crea_5dernieres),]$crea_5dernieres <- 0
+# summary(df_final$crea_5dernieres)
+# 
+# # entre 10 et 5 ans avant
+# df_final$crea_5_10dernieres <- -1
+# class(df_final$crea_5_10dernieres)
+# for (date in 2003:2014){
+#   u = etab[etab$Date %in% (date-10):(date-5),]
+#   a = aggregate(u$Date, by = u[,c('dep')], length)
+#   a$annee = date
+#   a$annee_deparc = paste0(a$annee,"_",a$dep)
+#   etab10 = setNames(a$x, a$annee_deparc)
+#   class(etab10[df_final$annee_deparc])
+#   df_final[df_final$annee == date,]$crea_5_10dernieres = as.numeric(etab10[df_final[df_final$annee == date,]$annee_deparc])
+# }
+# 
+# df_final[is.na(df_final$crea_5_10dernieres),]$crea_5_10dernieres <- 0
+# summary(df_final$crea_5_10dernieres)
+# 
+# #entre 4 et 6 ans avant
+# df_final$crea_4_6dernieres <- -1
+# class(df_final$crea_4_6dernieres)
+# for (date in 2003:2014){
+#   u = etab[etab$Date %in% (date-6):(date-4),]
+#   a = aggregate(u$Date, by = u[,c('dep')], length)
+#   a$annee = date
+#   a$annee_deparc = paste0(a$annee,"_",a$dep)
+#   etab10 = setNames(a$x, a$annee_deparc)
+#   class(etab10[df_final$annee_deparc])
+#   df_final[df_final$annee == date,]$crea_4_6dernieres = as.numeric(etab10[df_final[df_final$annee == date,]$annee_deparc])
+# }
+# 
+# df_final[is.na(df_final$crea_4_6dernieres),]$crea_4_6dernieres <- 0
+# summary(df_final$crea_4_6dernieres)
 
 names(df_final) [1] <- "dif_logsalmee"
 names(df_final) [2] <- "dif_taux_dip_dep"
