@@ -335,21 +335,11 @@ table_finale$cspm[table_finale$cspm=="7"]<-"1"
 
 
 ####Création de variables instrumentale pour le taux de diplômés dans le département
+#table_finale<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
 
 etab<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/Etablissements d'enseignement superieur.csv")
 #etab<-fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/Etablissements d'enseignement superieur.csv")
 etab$dep<-substr(etab$`Code département`,3,4)
-
-tmp<-lapply(split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc)),function(x){
-  #x<-split(table_finale[,c("annee","deparc")],paste0(table_finale$annee,"_",table_finale$deparc))[[1]]
-  etab_concerne<-etab[etab$Date<=unique(x$annee) & etab$dep == unique(x$deparc)]
-  t(colSums(etab_concerne[,c("Institut_Universitaire_de_Technologie","Institut_Universitaire_Professionnalisé","Université","Composante_universitaire","Ecole_ingénieurs" )],na.rm = TRUE))
-})
-tmp2<-do.call(rbind,tmp)
-row.names(tmp2)<-names(tmp)
-
-table_finale<-cbind(table_finale,tmp2[paste0(table_finale$annee,"_",table_finale$deparc),])
-#pour chaque département x année j'ai donc le nombre d'écoles de chaque type qui était ouvertes
 
 
 # =========================
@@ -357,7 +347,8 @@ table_finale<-cbind(table_finale,tmp2[paste0(table_finale$annee,"_",table_finale
 #Pour chaque depXannee on veut le nombre d'établisssement crées dans le dep entre 4 et 6 ans avant
 
 table_finale$annee_deparc<-paste0(table_finale$annee,"_",table_finale$dep)
-table_finale$crea_4_6dernieres <- 0 # on met la valeure à 0 si 0 création d'étab 6 ans auparavant.
+
+table_finale$crea_4_6_dernieres <- 0 # on met la valeure à 0 si 0 création d'étab 6 ans auparavant.
 tmp<-lapply((2003:2014) ,function(date){
   #date=2003
   u = etab[etab$Date %in% (date-6):(date-4),]
@@ -365,12 +356,62 @@ tmp<-lapply((2003:2014) ,function(date){
   a$annee_deparc = paste0(date,"_",a$dep)
   etab4_6 = setNames(a$x, a$annee_deparc)
   # class(etab4_6[cle])
+  })
+
+dep_annee_vers_crea<-do.call(c,tmp) 
+filtre<-table_finale$annee_deparc %in% names(dep_annee_vers_crea)
+table_finale[filtre,]$crea_4_6_dernieres<-dep_annee_vers_crea[table_finale[filtre,]$annee_deparc]
+
+table_finale$crea_4_6_dernieres_sup <- 0 # on met la valeure à 0 si 0 création d'étab 6 ans auparavant.
+tmp<-lapply((2003:2014) ,function(date){
+  #date=2003
+  u = etab[etab$Date %in% (date-6):(date-4) & etab$Ecole_ingénieurs ==1 | etab$Université ==1 | etab$Composante_universitaire == 1 ,]
+  a = aggregate(u$Date, by = u[,c('dep')], length)
+  a$annee_deparc = paste0(date,"_",a$dep)
+  etab4_6 = setNames(a$x, a$annee_deparc)
+  # class(etab4_6[cle])
+})
+
+dep_annee_vers_crea<-do.call(c,tmp) 
+filtre<-table_finale$annee_deparc %in% names(dep_annee_vers_crea)
+table_finale[filtre,]$crea_4_6_dernieres_sup<-dep_annee_vers_crea[table_finale[filtre,]$annee_deparc]
+
+
+
+table_finale$crea_5_10_dernieres <- 0 # on met la valeure à 0 si 0 création d'étab 6 ans auparavant.
+tmp<-lapply((2003:2014) ,function(date){
+  #date=2003
+  u = etab[etab$Date %in% (date-10):(date-5),]
+  a = aggregate(u$Date, by = u[,c('dep')], length)
+  a$annee_deparc = paste0(date,"_",a$dep)
+  etab5_10 = setNames(a$x, a$annee_deparc)
+  # class(etab4_6[cle])
   
 })
 
-dep_annee_vers_crea<-do.call(c,m) 
+dep_annee_vers_crea<-do.call(c,tmp) 
 filtre<-table_finale$annee_deparc %in% names(dep_annee_vers_crea)
-table_finale[filtre,]$crea_4_6dernieres<-dep_annee_vers_crea[table_finale[filtre,]$annee_deparc]
+table_finale[filtre,]$crea_5_10_dernieres<-dep_annee_vers_crea[table_finale[filtre,]$annee_deparc]
+
+
+
+table_finale$crea_5_10_dernieres_sup <- 0 # on met la valeure à 0 si 0 création d'étab 6 ans auparavant.
+tmp<-lapply((2003:2014) ,function(date){
+  #date=2003
+  u = etab[etab$Date %in% (date-10):(date-5) & etab$Ecole_ingénieurs ==1 | etab$Université ==1 | etab$Composante_universitaire == 1 ,]
+  
+  a = aggregate(u$Date, by = u[,c('dep')], length)
+  a$annee_deparc = paste0(date,"_",a$dep)
+  etab5_10 = setNames(a$x, a$annee_deparc)
+  # class(etab4_6[cle])
+  
+})
+
+
+dep_annee_vers_crea<-do.call(c,tmp) 
+filtre<-table_finale$annee_deparc %in% names(dep_annee_vers_crea)
+table_finale[filtre,]$crea_5_10_dernieres_sup<-dep_annee_vers_crea[table_finale[filtre,]$annee_deparc]
+
 
 
 # salaire horaire et log salaire
@@ -385,10 +426,13 @@ table_finale$log_salhor = log(table_finale$salhor)
 # =========================
 
 #pour chaque département x année je calcule le pourcentage de diplômés du supérieur
+# table_finale<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
+
 table_finale$taux_dip_dep<-sapply(split(table_finale$sit_ind,paste0(table_finale$annee,"_",table_finale$dep)),function(x){
   #x<-split(table_finale$sit_ind,paste0(table_finale$annee,"_",table_finale$dep))$'2003_75'
   # head(x)
-  (sum(x=="master et plus",na.rm = TRUE)/length(x))*100
+  liste_sup<-c("master et plus","licence maîtrise","licence maîtrise","Bac+2")
+  (sum(x %in% liste_sup,na.rm = TRUE)/length(x))*100
   })[paste0(table_finale$annee,"_",table_finale$dep)]
 
 
@@ -397,20 +441,13 @@ table_finale$typmen7[table_finale$typmen7 %in% c(5,6,9)]<-5
 table_finale$typmen<-ifelse(table_finale$annee %in% c("2013","2014"),table_finale$typmen7,table_finale$typmen5)
 
 
-###je prends la table pour df:
-# table_finale<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
-  # tmp<-sapply(split(table_finale$ident_ind,table_finale$ident_ind),length)
-  # ident_diff<-names(tmp[tmp>=2])
-  # table_diff<-table_finale[table_finale$ident_ind %in% ident_diff,]
-    
-#J'efface ce qui ne sert plus
 
 rm(list=ls()[ls()!="table_finale"])
 
 # fwrite(table_diff,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_diff.csv")
 
- fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
- save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")
+fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
+save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")
 #fwrite(table_finale,"C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv")
 #save.image(file="C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.Rdata")
 
