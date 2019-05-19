@@ -71,7 +71,6 @@ sapply(split(df_suite,df_suite$decennie),function(df_y){
   text(seq_along(freq_dip), 
        srt = 60, adj= 1,-300,xpd = TRUE,
        labels = names(freq_dip), cex=10)
-
 })
 
 

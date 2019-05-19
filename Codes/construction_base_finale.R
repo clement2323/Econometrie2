@@ -4,8 +4,8 @@ library(data.table)
 library(readstata13)
 
 #je source les libellés de variables
-source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
-#source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
+#source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
+source("C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/libelle_variable.R")
 #########################################
 ####Liste des des variables par thème####
 #########################################
@@ -15,8 +15,8 @@ source("C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/libelle_variable.R")
 # - actualisation en euro 2013 (du coup faut tout relancer pour salmet)
 # - taux chomage, retard 6eme (nb eleves avec 1 an retard en 6eme) et esp vie
 #   des departements (j'avais pas vu que tu avais deja mis le chomage aha)
-#departements = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/departements.csv')
-departements = fread('C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/departements.csv')
+departements = fread('C:/Users/Hugues/Desktop/Cours Ensae/econo/Codes/departements.csv')
+#departements = fread('C:/Users/Clement/Desktop/Projet Économétrie 2/Codes/departements.csv')
 
 
 
@@ -124,8 +124,8 @@ variable<-c("extri","extri15","actop","annee","ident","noi","noicon","stat2","st
             "cite97","datdip","datgen","datsup","ddipl","dip","dip11","dipdet","fordat","formoi","forsg","ngen","nivet","spe")
 
 
-path = "C:/Users/Clement/Desktop/Projet Économétrie 2/Données"
-#path = "C:/Users/Hugues/Desktop/Cours Ensae/econo/nouvelles_donnees"
+#path = "C:/Users/Clement/Desktop/Projet Économétrie 2/Données"
+path = "C:/Users/Hugues/Desktop/Cours Ensae/econo/nouvelles_donnees"
 files = list.files(path)
 
 
@@ -137,7 +137,7 @@ fichier<-lapply(files[-c(1)],function(f){
   dif<-setdiff(variable,colnames(data))
   print(dif)
   #equivalences de noms si 2013 et 2014
-  if(f %in% c("individu 2013.dta","individu 2014.dta")){
+  if(f %in% c("individu2013.dta","individu2014.dta")){
     tmp<-colnames(data)
     tmp[tmp=="dchantj"]<-"dchant" 
     tmp[tmp=="coured"]<-"cohab"
@@ -337,8 +337,8 @@ table_finale$cspm[table_finale$cspm=="7"]<-"1"
 ####Création de variables instrumentale pour le taux de diplômés dans le département
 #table_finale<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
 
-etab<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/Etablissements d'enseignement superieur.csv")
-#etab<-fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/Etablissements d'enseignement superieur.csv")
+#etab<-fread("C:/Users/Clement/Desktop/Projet Économétrie 2/Etablissements d'enseignement superieur.csv")
+etab<-fread("C:/Users/Hugues/Desktop/Cours Ensae/econo/Etablissements d'enseignement superieur.csv")
 etab$dep<-substr(etab$`Code département`,3,4)
 
 
@@ -446,10 +446,10 @@ rm(list=ls()[ls()!="table_finale"])
 
 # fwrite(table_diff,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_diff.csv")
 
-fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
-save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")
-#fwrite(table_finale,"C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv")
-#save.image(file="C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.Rdata")
+#fwrite(table_finale,"C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.csv")
+#save.image(file="C:/Users/Clement/Desktop/Projet Économétrie 2/table_finale.Rdata")
+fwrite(table_finale,"C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.csv")
+save.image(file="C:/Users/Hugues/Desktop/Cours Ensae/econo/table_finale.Rdata")
 
 
 rm(list=ls())
